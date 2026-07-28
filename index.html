@@ -1045,6 +1045,17 @@ animateStars();
   </div>
 </div>
 
+<script>
+// Modal controls — plain script, never blocked by Privy import
+window.openSignIn = function() {
+  document.getElementById('signinOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+window.closeSignIn = function() {
+  document.getElementById('signinOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+};
+</script>
 <script type="module">
 import { PrivyClient } from 'https://esm.sh/@privy-io/js-sdk-core';
 
@@ -1061,14 +1072,7 @@ if (localStorage.getItem('privy:token')) {
   window.location.href = DASHBOARD;
 }
 
-window.openSignIn = function() {
-  document.getElementById('signinOverlay').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-};
-window.closeSignIn = function() {
-  document.getElementById('signinOverlay').style.display = 'none';
-  document.body.style.overflow = '';
-};
+// openSignIn/closeSignIn defined in plain script above
 
 function showError(msg) {
   const el = document.getElementById('privy-error');
