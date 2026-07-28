@@ -1046,26 +1046,20 @@ animateStars();
 </div>
 
 <script type="module">
+import { PrivyClient } from 'https://esm.sh/@privy-io/js-sdk-core';
+
 const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 const DASHBOARD = 'pages/dashboard.html';
 const CALLBACK = 'pages/auth-callback.html';
 
-let privy = null;
+// Static import guarantees privy is ready before any user interaction
+const privy = new PrivyClient({ appId: PRIVY_APP_ID, storage: window.localStorage });
 let currentEmail = '';
 
-// ── Init Privy with correct constructor ──────────────────────────────────────
-async function loadPrivy() {
-  try {
-    const { PrivyClient } = await import('https://esm.sh/@privy-io/js-sdk-core');
-    privy = new PrivyClient({ appId: PRIVY_APP_ID, storage: window.localStorage });
-    // Already have a valid session?
-    const token = localStorage.getItem('privy:token');
-    if (token) { window.location.href = DASHBOARD; }
-  } catch(e) {
-    console.warn('Privy SDK failed to load:', e);
-  }
+// Already have a valid session? Skip straight to dashboard
+if (localStorage.getItem('privy:token')) {
+  window.location.href = DASHBOARD;
 }
-loadPrivy();
 
 window.openSignIn = function() {
   document.getElementById('signinOverlay').style.display = 'flex';
@@ -1090,7 +1084,6 @@ function setLoading(btn, loading) {
 
 // ── OAuth (Google / Twitter) — redirect flow ─────────────────────────────────
 window.privyLogin = async function(provider) {
-  if (!privy) { showError('Still loading — try again'); return; }
   const redirectURI = window.location.origin +
     (window.location.pathname.replace(/[^/]*$/, '')) + CALLBACK;
   try {
@@ -1106,7 +1099,6 @@ window.privyLogin = async function(provider) {
 window.privySendEmail = async function() {
   const email = document.getElementById('privy-email').value.trim();
   if (!email || !email.includes('@')) { showError('Enter a valid email address'); return; }
-  if (!privy) { showError('Still loading — try again'); return; }
   currentEmail = email;
   const btn = document.querySelector('#privy-step1 button:last-child');
   setLoading(btn, true);
@@ -1127,7 +1119,6 @@ window.privySendEmail = async function() {
 window.privyVerifyOtp = async function() {
   const otp = document.getElementById('privy-otp').value.trim();
   if (otp.length < 6) { showError('Enter the full 6-digit code'); return; }
-  if (!privy) { showError('Still loading — try again'); return; }
   const btn = document.querySelector('#privy-step2 button:first-child');
   setLoading(btn, true);
   try {
