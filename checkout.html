@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mirage — Ephemeral Payment Gateway</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<!-- QRCode.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --white:#ffffff;
+    --off-white:#f1f3f9;
+    --muted:#8c8f9f;
+    --bg:#07080e;
+    --glass-border:rgba(255,255,255,0.08);
+    --accent-blue:#4f9fff;
+    --accent-cyan:#00d4ff;
+    --accent-green:#5deba0;
+    --accent-red:#ff5f57;
+  }
+  body{
+    background:var(--bg);
+    color:var(--off-white);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    line-height:1.65;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* Dynamic Atmospheric Ambient Glow */
+  .bg-scene{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+  }
+  .grid-overlay{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image:radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 75%);
+  }
+  .light-core{
+    position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);
+    width:500px;height:500px;
+    background:radial-gradient(circle, rgba(79,159,255,0.12) 0%, rgba(0,212,255,0.04) 50%, transparent 80%);
+    filter:blur(60px);
+    pointer-events:none;
+  }
+
+  /* Green Flash Overlay */
+  .green-flash{
+    position:fixed;inset:0;
+    background:radial-gradient(circle, rgba(93,235,160,0.2) 0%, transparent 70%);
+    opacity:0;pointer-events:none;z-index:1;
+    transition:opacity 0.6s ease;
+  }
+  .green-flash.active{ opacity:1; }
+
+  /* Brand Header */
+  .brand-badge{
+    display:flex;align-items:center;gap:8px;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:700;font-size:15px;color:var(--white);
+    margin-bottom:24px;z-index:2;
+  }
+  .logo-icon{
+    width:22px;height:22px;
+    background:linear-gradient(135deg,rgba(79,159,255,0.9),rgba(0,212,255,0.7));
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;
+  }
+
+  /* Portal Card Container */
+  .portal-card{
+    position:relative;z-index:2;
+    width:100%;max-width:440px;
+    background:rgba(10,11,18,0.85);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:24px;
+    padding:36px 28px;
+    backdrop-filter:blur(30px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.05),
+      0 32px 80px rgba(0,0,0,0.6),
+      0 0 80px rgba(79,159,255,0.05);
+  }
+  
+  /* Portal Header */
+  .portal-header{ text-align:center;margin-bottom:28px; }
+  .merchant-title{
+    font-size:13px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;
+  }
+  .amount-display{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:42px;font-weight:800;color:var(--white);
+    letter-spacing:-0.03em;line-height:1;margin-bottom:8px;
+  }
+  .amount-display span{ font-size:22px;color:rgba(255,255,255,0.6);font-weight:600; }
+  .order-ref{
+    display:inline-block;font-size:12px;color:var(--muted);
+    background:rgba(255,255,255,0.03);padding:3px 10px;border-radius:100px;
+    border:1px solid rgba(255,255,255,0.05);font-family:'JetBrains Mono',monospace;
+  }
+
+  /* Portal State Visibility */
+  .portal-state{ display:none; flex-direction:column; align-items:center; }
+  .portal-state.active-state{ display:flex; }
+
+  /* State 1: Waiting Elements */
+  .qr-container{
+    position:relative;
+    background:#ffffff;
+    padding:14px;border-radius:16px;
+    box-shadow:0 12px 32px rgba(0,0,0,0.4);
+    margin-bottom:20px;
+  }
+  .qr-container canvas, .qr-container img{ display:block; }
+
+  .address-box{
+    width:100%;
+    background:rgba(0,0,0,0.4);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:10px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;margin-bottom:20px;
+    transition:opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s ease;
+  }
+  .facade-address{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--accent-cyan);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .btn-copy{
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+    color:var(--white);font-size:11px;font-weight:600;padding:6px 12px;
+    border-radius:8px;cursor:pointer;transition:all 0.2s;flex-shrink:0;
+  }
+  .btn-copy:hover{ background:rgba(255,255,255,0.12); }
+
+  .timer-bar{
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;color:var(--muted);margin-bottom:16px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .timer-count{ color:var(--white);font-weight:600; }
+
+  .status-indicator{
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:500;color:var(--accent-blue);
+    margin-bottom:20px;
+  }
+  .pulse-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent-blue);
+    box-shadow:0 0 10px var(--accent-blue);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.85)} }
+
+  .instruction-note{
+    font-size:12px;color:var(--muted);text-align:center;
+    line-height:1.6;background:rgba(255,255,255,0.02);
+    border:1px dashed rgba(255,255,255,0.08);padding:12px 16px;border-radius:12px;
+  }
+
+  /* Modern Animated Checkmark SVG */
+  .animated-check-wrap{
+    width:72px;height:72px;
+    margin-bottom:20px;
+    position:relative;
+  }
+  .check-svg{
+    width:100%;height:100%;
+    overflow:visible;
+  }
+  .check-circle{
+    fill:none;
+    stroke:rgba(93,235,160,0.2);
+    stroke-width:2.5;
+    transform-origin:center;
+    transform:scale(0);
+    animation:growCircle 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .check-circle-fill{
+    fill:rgba(93,235,160,0.08);
+    stroke:var(--accent-green);
+    stroke-width:2.5;
+    stroke-dasharray:160;
+    stroke-dashoffset:160;
+    transform-origin:center;
+    animation:drawCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards 0.1s;
+  }
+  .check-path{
+    fill:none;
+    stroke:var(--accent-green);
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    stroke-dasharray:40;
+    stroke-dashoffset:40;
+    animation:drawCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) forwards 0.5s;
+  }
+
+  @keyframes growCircle {
+    0% { transform:scale(0); opacity:0; }
+    100% { transform:scale(1); opacity:1; }
+  }
+  @keyframes drawCircle {
+    100% { stroke-dashoffset:0; }
+  }
+  @keyframes drawCheck {
+    100% { stroke-dashoffset:0; }
+  }
+
+  /* Expired Icon Animation */
+  .animated-expired-wrap{
+    width:72px;height:72px;
+    margin-bottom:20px;
+    position:relative;
+  }
+  .expired-circle{
+    fill:rgba(255,95,87,0.08);
+    stroke:var(--accent-red);
+    stroke-width:2.5;
+    transform-origin:center;
+    animation:growCircle 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .expired-line{
+    fill:none;
+    stroke:var(--accent-red);
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-dasharray:30;
+    stroke-dashoffset:30;
+    animation:drawCheck 0.3s ease forwards 0.4s;
+  }
+
+  .state-title{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:22px;font-weight:700;color:var(--white);
+    margin-bottom:6px;
+  }
+
+  .dissolve-note{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--accent-cyan);
+    opacity:0.8;margin-top:12px;margin-bottom:16px;
+    text-align:center;
+  }
+
+  .timestamp-tag{
+    font-size:12px;color:var(--muted);
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .btn-request-new{
+    width:100%;margin-top:20px;padding:12px;
+    border-radius:100px;background:var(--white);color:#08080f;
+    border:none;font-size:13px;font-weight:600;
+    cursor:pointer;transition:all 0.22s ease;
+  }
+  .btn-request-new:hover{ transform:translateY(-1px);background:rgba(255,255,255,0.9); }
+
+  /* Smooth Dissolve Effect */
+  .faded-out{ opacity:0 !important; transform:scale(0.95); pointer-events:none; }
+</style>
+</head>
+<body>
+
+<div class="bg-scene">
+  <div class="grid-overlay"></div>
+  <div class="light-core"></div>
+</div>
+<div class="green-flash" id="greenFlash"></div>
+
+<div class="brand-badge">
+  <div class="logo-icon">✨</div>
+  <span>Mirage Ephemeral Pay</span>
+</div>
+
+<!-- Main Gateway Card -->
+<div class="portal-card">
+  <div class="portal-header">
+    <div class="merchant-title" id="merchantName">Acme Corp</div>
+    <div class="amount-display">120.00 <span>USDC</span></div>
+    <div class="order-ref" id="orderRef">Order Ref: #INV-89201</div>
+  </div>
+
+  <!-- STATE 1: WAITING -->
+  <div class="portal-state active-state" id="stateWaiting">
+    <div class="qr-container" id="qrcode"></div>
+
+    <div class="address-box" id="addressBox">
+      <div class="facade-address" id="facadeAddr">0x71C...4e89f2A</div>
+      <button class="btn-copy" id="btnCopy" onclick="copyAddress()">Copy</button>
+    </div>
+
+    <div class="timer-bar">
+      <span>Time Remaining:</span>
+      <span class="timer-count" id="timerCount">05:00</span>
+    </div>
+
+    <div class="status-indicator">
+      <div class="pulse-dot"></div>
+      <span>Waiting for payment...</span>
+    </div>
+
+    <div class="instruction-note">
+      Open your wallet. Send <strong>exactly 120.00 USDC</strong> to this address. No app connection required.
+    </div>
+  </div>
+
+  <!-- STATE 2: CONFIRMED -->
+  <div class="portal-state" id="stateConfirmed">
+    <div class="animated-check-wrap">
+      <svg class="check-svg" viewBox="0 0 50 50">
+        <circle class="check-circle-fill" cx="25" cy="25" r="22" />
+        <path class="check-path" d="M14,25 L22,33 L36,17" />
+      </svg>
+    </div>
+
+    <div class="state-title">Payment Received</div>
+    
+    <!-- Dissolving Facade Address Area -->
+    <div class="address-box" id="dissolvingAddrBox" style="width:100%; margin-top:12px;">
+      <div class="facade-address" id="confirmedFacadeAddr">0x71C...4e89f2A</div>
+      <span style="font-size:10px;color:var(--accent-green);font-family:'JetBrains Mono',monospace;">PAID</span>
+    </div>
+    
+    <div class="dissolve-note" id="dissolveLine" style="display:none;">
+      This address no longer exists on-chain.
+    </div>
+
+    <div class="timestamp-tag" id="confirmationTimestamp">Confirmed at --:--:--</div>
+  </div>
+
+  <!-- STATE 3: EXPIRED -->
+  <div class="portal-state" id="stateExpired">
+    <div class="animated-expired-wrap">
+      <svg class="check-svg" viewBox="0 0 50 50">
+        <circle class="expired-circle" cx="25" cy="25" r="22" />
+        <path class="expired-line" d="M16,16 L34,34" />
+        <path class="expired-line" d="M34,16 L16,34" />
+      </svg>
+    </div>
+
+    <div class="state-title">Payment Expired</div>
+    <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:4px;">
+      This payment link has expired.
+    </p>
+    <button class="btn-request-new" onclick="restartPaymentFlow()">Request New Payment Link</button>
+  </div>
+</div>
+
+<script>
+  // Configuration Variables
+  const FACADE_ADDRESS = "0x71C7656EC7ab88b098defB751B7401B5f6d89f2A";
+  let countdownSeconds = 300; // 5 Minutes Default
+  let timerInterval = null;
+  let webSocketListener = null;
+
+  // Render QR Code
+  new QRCode(document.getElementById("qrcode"), {
+    text: FACADE_ADDRESS,
+    width: 140,
+    height: 140,
+    colorDark : "#07080e",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+
+  document.getElementById("facadeAddr").innerText = FACADE_ADDRESS;
+  document.getElementById("confirmedFacadeAddr").innerText = FACADE_ADDRESS;
+
+  // Countdown Logic
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (countdownSeconds <= 0) {
+        clearInterval(timerInterval);
+        transitionToState(3); // Expire flow
+        return;
+      }
+      countdownSeconds--;
+      const mins = Math.floor(countdownSeconds / 60);
+      const secs = countdownSeconds % 60;
+      document.getElementById("timerCount").innerText = 
+        `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  // Copy Address Helper
+  function copyAddress() {
+    navigator.clipboard.writeText(FACADE_ADDRESS);
+    const copyBtn = document.getElementById("btnCopy");
+    copyBtn.innerText = "Copied!";
+    setTimeout(() => { copyBtn.innerText = "Copy"; }, 2000);
+  }
+
+  // Gateway Transition Engine
+  function transitionToState(stateNumber) {
+    document.querySelectorAll('.portal-state').forEach(el => el.classList.remove('active-state'));
+    document.getElementById('greenFlash').classList.remove('active');
+    
+    const addrBox = document.getElementById('dissolvingAddrBox');
+    const dissolveLine = document.getElementById('dissolveLine');
+    addrBox.classList.remove('faded-out');
+    dissolveLine.style.display = 'none';
+
+    if (stateNumber === 1) {
+      document.getElementById('stateWaiting').classList.add('active-state');
+      countdownSeconds = 300;
+      startTimer();
+      listenForOnChainPayment();
+    } 
+    else if (stateNumber === 2) {
+      clearInterval(timerInterval);
+      document.getElementById('stateConfirmed').classList.add('active-state');
+      
+      // Flash Green Background
+      document.getElementById('greenFlash').classList.add('active');
+      setTimeout(() => document.getElementById('greenFlash').classList.remove('active'), 800);
+
+      // Record Confirmation Time
+      const now = new Date();
+      document.getElementById('confirmationTimestamp').innerText = 
+        `Confirmed at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+
+      // Visually dissolve address
+      setTimeout(() => {
+        addrBox.classList.add('faded-out');
+        setTimeout(() => {
+          dissolveLine.style.display = 'block';
+        }, 600);
+      }, 1200);
+    } 
+    else if (stateNumber === 3) {
+      clearInterval(timerInterval);
+      document.getElementById('stateExpired').classList.add('active-state');
+    }
+  }
+
+  // REAL INTEGRATION POINT: Connect your WebSocket/RPC endpoint here
+  function listenForOnChainPayment() {
+    /* 
+      Example Real Setup:
+      const ws = new WebSocket('wss://your-payment-indexer.com');
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.status === 'CONFIRMED' && data.address === FACADE_ADDRESS) {
+          transitionToState(2);
+        }
+      };
+    */
+
+    // FOR DEMO: Automatically simulates payment confirmation after 12 seconds
+    console.log("Listening for RPC / WebSocket payment events for:", FACADE_ADDRESS);
+    setTimeout(() => {
+      // Trigger confirmation if still waiting
+      if (document.getElementById('stateWaiting').classList.contains('active-state')) {
+        transitionToState(2);
+      }
+    }, 12000);
+  }
+
+  function restartPaymentFlow() {
+    transitionToState(1);
+  }
+
+  // Initialize Flow on load
+  transitionToState(1);
+</script>
+</body>
+</html>

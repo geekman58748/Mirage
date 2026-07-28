@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MiragePay — Merchant Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #08090d;
+    --bg-surface: #0f1117;
+    --bg-surface-active: #161922;
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-bright: rgba(255, 255, 255, 0.12);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #8a94a6;
+    --text-muted: #4a5264;
+    
+    --cyan: #06b6d4;
+    --indigo: #6366f1;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --rose: #f43f5e;
+
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── APP LAYOUT ── */
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    background: #0b0d13;
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+  }
+
+  .brand-header {
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .brand-logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--indigo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-icon-svg {
+    width: 16px;
+    height: 16px;
+    color: white;
+  }
+
+  .brand-name {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .brand-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(99, 102, 241, 0.1);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    margin-left: auto;
+  }
+
+  .nav-section {
+    padding: 20px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    margin-top: 8px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 13px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: transparent;
+    text-decoration: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .nav-btn.active {
+    color: #ffffff;
+    background: var(--bg-surface-active);
+    border-color: var(--border-subtle);
+  }
+
+  .nav-btn .icon-box {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: currentColor;
+    opacity: 0.8;
+  }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-subtle);
+    background: #08090d;
+  }
+
+  .privacy-status-widget {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.04);
+    border: 1px solid rgba(16, 185, 129, 0.12);
+  }
+
+  .pulse-node {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--emerald);
+  }
+
+  /* ── MAIN CONTENT AREA ── */
+  .main-stage {
+    flex: 1;
+    margin-left: 260px;
+    padding: 36px 48px;
+    max-width: 1400px;
+  }
+
+  .page-view {
+    display: none;
+    animation: fadeIn 0.2s ease forwards;
+  }
+  .page-view.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── TOP HEADER BAR ── */
+  .view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+  }
+
+  .view-title-group h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .view-title-group p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* ── MATTE CARDS ── */
+  .glass-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── OVERVIEW / METRICS ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .metric-card {
+    padding: 24px;
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .metric-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+  }
+
+  .metric-value-huge {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #ffffff;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .currency-tag {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+  }
+
+  .metric-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    margin-top: 10px;
+    color: var(--text-secondary);
+  }
+
+  .trend-up {
+    color: var(--emerald);
+    font-weight: 600;
+  }
+
+  /* ── TERMINAL TABLE DESIGN ── */
+  .terminal-box {
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .terminal-bar {
+    background: #0b0d13;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .terminal-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-family: var(--font-sans);
+  }
+
+  .data-table.mono-styled {
+    font-family: var(--font-mono);
+  }
+
+  .data-table th {
+    padding: 12px 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .data-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px;
+    color: var(--text-secondary);
+    vertical-align: middle;
+  }
+
+  .data-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .data-table tr:hover td {
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  /* ── SENDER / STATUS BADGES ── */
+  .badge-private {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(147, 51, 234, 0.08);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .redacted-chars {
+    letter-spacing: 2px;
+    opacity: 0.5;
+  }
+
+  .tag-destroyed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(244, 63, 94, 0.06);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    color: #fb7185;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .truncated-facade {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .status-flow-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ── PAYMENT LINKS WORKFLOW ── */
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .form-card {
+    padding: 28px;
+  }
+
+  .field-group {
+    margin-bottom: 20px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .input-styled {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #08090d;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    transition: border-color 0.15s ease;
+  }
+
+  .input-styled:focus {
+    outline: none;
+    border-color: var(--border-bright);
+  }
+
+  .expiry-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .radio-pill {
+    position: relative;
+  }
+
+  .radio-pill input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .radio-label {
+    display: block;
+    padding: 9px;
+    text-align: center;
+    border-radius: 6px;
+    background: #08090d;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .radio-pill input:checked + .radio-label {
+    background: var(--bg-surface-active);
+    border-color: var(--border-bright);
+    color: #ffffff;
+  }
+
+  .btn-action-primary {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #08090d;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-action-primary:hover {
+    background: #e2e8f0;
+  }
+
+  .preview-display-card {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 400px;
+  }
+
+  .qr-code-frame {
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+
+  .facade-address-pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-primary);
+    background: #08090d;
+    border: 1px solid var(--border-subtle);
+    padding: 8px 14px;
+    border-radius: 6px;
+    word-break: break-all;
+    margin-top: 10px;
+  }
+
+  /* ── VAULT STYLES ── */
+  .vault-hero {
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .vault-lock-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: var(--text-primary);
+  }
+
+  .vault-address-container {
+    background: #08090d;
+    border: 1px solid var(--border-subtle);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 20px 0 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ── API KEYS ── */
+  .key-card {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    background: var(--bg-surface);
+  }
+
+  .key-val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  .btn-revoke {
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: rgba(244, 63, 94, 0.06);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    color: var(--rose);
+    font-weight: 500;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .btn-revoke:hover {
+    background: rgba(244, 63, 94, 0.12);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1024px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+    .workflow-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 70px; }
+    .brand-name, .nav-btn span, .brand-badge, .nav-label, .sidebar-footer span { display: none; }
+    .main-stage { margin-left: 70px; padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <div class="brand-logo-mark">
+        <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
+      <span class="brand-name">MiragePay</span>
+      <span class="brand-badge">V2</span>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Core App</div>
+      
+      <button class="nav-btn active" onclick="switchNav('overview', this)">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        </div>
+        <span>Overview</span>
+      </button>
+
+      <button class="nav-btn" onclick="switchNav('payments', this)">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        </div>
+        <span>Payments</span>
+      </button>
+
+      <button class="nav-btn" onclick="switchNav('payment-links', this)">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </div>
+        <span>Payment Links</span>
+      </button>
+
+      <button class="nav-btn" onclick="switchNav('vault', this)">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <span>Vault</span>
+      </button>
+
+      <div class="nav-label">Developer</div>
+
+      <button class="nav-btn" onclick="switchNav('api-keys', this)">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4.1a1 1 0 0 0-1.4 0l-2.1 2.1a1 1 0 0 0 0 1.3Zm0 0L7 16"/><circle cx="5.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <span>API Keys</span>
+      </button>
+
+      <button class="nav-btn" onclick="switchNav('settings', this)">
+        <div class="icon-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+        </div>
+        <span>Settings</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="privacy-status-widget">
+        <div class="pulse-node"></div>
+        <div style="display:flex;flex-direction:column;">
+          <span style="font-size:11px;font-weight:600;color:var(--text-primary);">Zero-Exposure</span>
+          <span style="font-size:10px;color:var(--text-muted);">Shield Active</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN STAGE -->
+  <main class="main-stage">
+
+    <!-- 1. OVERVIEW VIEW -->
+    <div id="overview" class="page-view active">
+      <div class="view-header">
+        <div class="view-title-group">
+          <h1>Merchant Overview</h1>
+          <p>Real-time analytics & active ephemeral routing stats</p>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="glass-card metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Total Received This Month</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5C15 8.1 13.7 7 12 7s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg>
+          </div>
+          <div class="metric-value-huge">
+            $184,920.00
+            <span class="currency-tag">USDC</span>
+          </div>
+          <div class="metric-footer">
+            <span class="trend-up">+24.8%</span> vs previous month
+          </div>
+        </div>
+
+        <div class="glass-card metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Payments Processed</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="metric-value-huge">
+            1,402
+          </div>
+          <div class="metric-footer">
+            100% swept & auto-closed
+          </div>
+        </div>
+
+        <div class="glass-card metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Active Facade Addrs</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div class="metric-value-huge" style="color:var(--text-primary);">
+            0
+          </div>
+          <div class="metric-footer">
+            <span style="color:var(--text-muted)">Idle mode · Zero public footprint</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE FEED TERMINAL -->
+      <div class="terminal-box">
+        <div class="terminal-bar">
+          <span class="terminal-title">LIVE_PAYMENT_STREAM</span>
+          <span style="font-size:10px;font-family:var(--font-mono);color:var(--emerald);">● STREAMING</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table mono-styled">
+            <thead>
+              <tr>
+                <th>Amount</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Sender</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:#ffffff;font-weight:600;">$4,250.00 USDC</td>
+                <td style="color:var(--text-muted)">12s ago</td>
+                <td><span style="color:var(--text-secondary)">Forwarded</span></td>
+                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+              </tr>
+              <tr>
+                <td style="color:#ffffff;font-weight:600;">$890.00 USDC</td>
+                <td style="color:var(--text-muted)">4m ago</td>
+                <td><span style="color:var(--text-secondary)">Closed</span></td>
+                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+              </tr>
+              <tr>
+                <td style="color:#ffffff;font-weight:600;">$12,500.00 USDC</td>
+                <td style="color:var(--text-muted)">18m ago</td>
+                <td><span style="color:var(--text-secondary)">Closed</span></td>
+                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+              </tr>
+              <tr>
+                <td style="color:#ffffff;font-weight:600;">$150.00 USDC</td>
+                <td style="color:var(--text-muted)">1h ago</td>
+                <td><span style="color:var(--text-secondary)">Closed</span></td>
+                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+              </tr>
+              <tr>
+                <td style="color:#ffffff;font-weight:600;">$1,820.00 USDC</td>
+                <td style="color:var(--text-muted)">2h ago</td>
+                <td><span style="color:var(--text-secondary)">Closed</span></td>
+                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. PAYMENTS VIEW -->
+    <div id="payments" class="page-view">
+      <div class="view-header">
+        <div class="view-title-group">
+          <h1>Full Payments Ledger</h1>
+          <p>Historical audit log of ephemeral addresses and settlement lifecycles</p>
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="terminal-bar">
+          <span class="terminal-title">PAYMENT_HISTORY_LOG // NO SENDER RECORDED</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table mono-styled">
+            <thead>
+              <tr>
+                <th>Facade Address Used</th>
+                <th>Amount Received</th>
+                <th>Timestamp</th>
+                <th>Status Lifecycle</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="truncated-facade">0x7f83...a9b2</td>
+                <td style="color:#ffffff;font-weight:600;">$4,250.00 USDC</td>
+                <td style="color:var(--text-muted)">2026-07-28 12:24:47</td>
+                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
+                <td><span class="tag-destroyed">Destroyed</span></td>
+              </tr>
+              <tr>
+                <td class="truncated-facade">0x3e19...88c1</td>
+                <td style="color:#ffffff;font-weight:600;">$890.00 USDC</td>
+                <td style="color:var(--text-muted)">2026-07-28 12:20:12</td>
+                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
+                <td><span class="tag-destroyed">Destroyed</span></td>
+              </tr>
+              <tr>
+                <td class="truncated-facade">0x9a44...d120</td>
+                <td style="color:#ffffff;font-weight:600;">$12,500.00 USDC</td>
+                <td style="color:var(--text-muted)">2026-07-28 12:06:30</td>
+                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
+                <td><span class="tag-destroyed">Destroyed</span></td>
+              </tr>
+              <tr>
+                <td class="truncated-facade">0x11b8...99e4</td>
+                <td style="color:#ffffff;font-weight:600;">$150.00 USDC</td>
+                <td style="color:var(--text-muted)">2026-07-28 11:15:00</td>
+                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
+                <td><span class="tag-destroyed">Destroyed</span></td>
+              </tr>
+              <tr>
+                <td class="truncated-facade">0x88c2...e711</td>
+                <td style="color:#ffffff;font-weight:600;">$1,820.00 USDC</td>
+                <td style="color:var(--text-muted)">2026-07-28 10:04:19</td>
+                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
+                <td><span class="tag-destroyed">Destroyed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PAYMENT LINKS WORKFLOW -->
+    <div id="payment-links" class="page-view">
+      <div class="view-header">
+        <div class="view-title-group">
+          <h1>Payment Link Generator</h1>
+          <p>Create single-use facade addresses for checkout or direct invoicing</p>
+        </div>
+      </div>
+
+      <div class="workflow-grid">
+        <div class="glass-card form-card">
+          <form onsubmit="handleGenerateLink(event)">
+            <div class="field-group">
+              <label class="field-label">Amount (USDC)</label>
+              <input type="number" step="0.01" class="input-styled" id="link-amount" placeholder="Leave blank for open amount" />
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Label / Order Reference</label>
+              <input type="text" class="input-styled" id="link-label" placeholder="e.g. Invoice #8921 or Retainer Fee" required />
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Facade Address Expiry</label>
+              <div class="expiry-selector">
+                <div class="radio-pill">
+                  <input type="radio" id="exp5" name="expiry" value="5 min">
+                  <label for="exp5" class="radio-label">5 min</label>
+                </div>
+                <div class="radio-pill">
+                  <input type="radio" id="exp15" name="expiry" value="15 min" checked>
+                  <label for="exp15" class="radio-label">15 min</label>
+                </div>
+                <div class="radio-pill">
+                  <input type="radio" id="exp60" name="expiry" value="1 hour">
+                  <label for="exp60" class="radio-label">1 hour</label>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-action-primary" style="margin-top: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Generate Ephemeral Checkout
+            </button>
+          </form>
+        </div>
+
+        <div class="glass-card preview-display-card" id="preview-panel">
+          <div style="color:var(--text-muted);font-size:13px;">
+            Fill in the parameters on the left to spin up an ephemeral facade address + QR code.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. VAULT VIEW -->
+    <div id="vault" class="page-view">
+      <div class="view-header">
+        <div class="view-title-group">
+          <h1>Hidden Master Vault</h1>
+          <p>Private treasury hub — unlinked from public block explorer queries</p>
+        </div>
+      </div>
+
+      <div class="glass-card vault-hero">
+        <div class="vault-lock-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Private Master Balance</div>
+        <div style="font-size:40px;font-weight:700;color:#ffffff;margin:8px 0;">
+          $482,910.45 <span style="font-size:16px;color:var(--text-secondary);font-family:var(--font-mono)">USDC</span>
+        </div>
+
+        <div style="margin-top:12px;">
+          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">Master Vault Address:</span>
+          <div class="vault-address-container">
+            <span>0x9fA2...8b11c002A99d4e</span>
+          </div>
+        </div>
+
+        <button class="btn-action-primary" style="max-width:200px;margin:20px auto 0;">
+          Withdraw Funds
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. API KEYS VIEW -->
+    <div id="api-keys" class="page-view">
+      <div class="view-header">
+        <div class="view-title-group">
+          <h1>API Credentials</h1>
+          <p>Integrate MiragePay facade generation into custom checkouts</p>
+        </div>
+        <button class="btn-action-primary" style="width:auto;padding:8px 16px;">+ New API Key</button>
+      </div>
+
+      <div class="glass-card key-card">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px">LIVE PRODUCTION KEY</div>
+          <div class="key-val">mrg_live_99d12a84e09117c2f88a</div>
+        </div>
+        <button class="btn-revoke">Revoke</button>
+      </div>
+
+      <div class="glass-card key-card">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px">SANDBOX TEST KEY</div>
+          <div class="key-val">mrg_test_00a18471f98124cc11e0</div>
+        </div>
+        <button class="btn-revoke">Revoke</button>
+      </div>
+    </div>
+
+    <!-- 6. SETTINGS VIEW -->
+    <div id="settings" class="page-view">
+      <div class="view-header">
+        <div class="view-title-group">
+          <h1>Settings</h1>
+          <p>Facade behavior, auto-sweep thresholds, and notification webhooks</p>
+        </div>
+      </div>
+      <div class="glass-card" style="padding:28px;">
+        <p style="color:var(--text-secondary)">Settings configurations & webhook endpoint mappings.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function switchNav(pageId, btnElement) {
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(pageId).classList.add('active');
+    btnElement.classList.add('active');
+  }
+
+  function handleGenerateLink(e) {
+    e.preventDefault();
+    const amount = document.getElementById('link-amount').value || 'Open Amount';
+    const label = document.getElementById('link-label').value;
+    const randomHex = '0x' + Math.random().toString(16).substring(2, 10) + '...' + Math.random().toString(16).substring(2, 6);
+    
+    const preview = document.getElementById('preview-panel');
+    preview.innerHTML = `
+      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;">● Ephemeral Facade Active</div>
+      <div style="font-size:20px;font-weight:700;color:#fff;margin-top:4px;">${label}</div>
+      <div style="font-size:15px;color:var(--text-primary);font-weight:600;margin-top:2px;">${amount === 'Open Amount' ? amount : '$' + amount + ' USDC'}</div>
+      
+      <div class="qr-code-frame">
+        <svg width="110" height="110" viewBox="0 0 100 100" fill="#000">
+          <path d="M0 0h30v30H0zM10 10h10v10H10zM70 0h30v30H70zM80 10h10v10H80zM0 70h30v30H0zM10 80h10v10H10zM40 10h10v10H40zM50 40h20v20H50zM80 50h20v20H80z"/>
+        </svg>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted)">Disposable Address:</div>
+      <div class="facade-address-pill">${randomHex}</div>
+      <button class="btn-action-primary" style="margin-top:16px;padding:9px 16px;font-size:12px;" onclick="navigator.clipboard.writeText('https://pay.mirage.sh/checkout/${randomHex}')">
+        Copy Shareable Checkout Link
+      </button>
+    `;
+  }
+</script>
+</body>
+</html>
