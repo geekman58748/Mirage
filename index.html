@@ -1048,26 +1048,27 @@ animateStars();
 <script type="module">
 const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 const DASHBOARD = 'pages/dashboard.html';
+const CALLBACK = 'pages/auth-callback.html';
 
-// Privy headless client via ESM CDN
 let privy = null;
 let currentEmail = '';
 
+// ── Init Privy with correct constructor ──────────────────────────────────────
 async function loadPrivy() {
   try {
     const { PrivyClient } = await import('https://esm.sh/@privy-io/js-sdk-core');
-    privy = new PrivyClient({ appId: PRIVY_APP_ID });
-    // Already logged in?
-    if (privy.user) { window.location.href = DASHBOARD; return; }
+    privy = new PrivyClient({ appId: PRIVY_APP_ID, storage: window.localStorage });
+    // Already have a valid session?
+    const token = localStorage.getItem('privy:token');
+    if (token) { window.location.href = DASHBOARD; }
   } catch(e) {
-    console.warn('Privy SDK load issue:', e);
+    console.warn('Privy SDK failed to load:', e);
   }
 }
 loadPrivy();
 
 window.openSignIn = function() {
-  const overlay = document.getElementById('signinOverlay');
-  overlay.style.display = 'flex';
+  document.getElementById('signinOverlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 };
 window.closeSignIn = function() {
@@ -1077,47 +1078,66 @@ window.closeSignIn = function() {
 
 function showError(msg) {
   const el = document.getElementById('privy-error');
-  el.textContent = msg; el.style.display = 'block';
+  el.textContent = msg;
+  el.style.display = 'block';
   setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
+function setLoading(btn, loading) {
+  btn.disabled = loading;
+  btn.style.opacity = loading ? '0.6' : '1';
+}
+
+// ── OAuth (Google / Twitter) — redirect flow ─────────────────────────────────
 window.privyLogin = async function(provider) {
-  if (!privy) { window.location.href = DASHBOARD; return; }
+  if (!privy) { showError('Still loading — try again'); return; }
+  const redirectURI = window.location.origin +
+    (window.location.pathname.replace(/[^/]*$/, '')) + CALLBACK;
   try {
-    const redirectUri = window.location.origin + '/' + DASHBOARD;
-    await privy.loginWithOAuth({ provider, redirectUri });
+    const { url } = await privy.oauth.generateURL(provider, redirectURI);
+    window.location.href = url;
   } catch(e) {
-    console.error(e);
-    // Privy not configured for OAuth yet — route directly to dashboard
-    window.location.href = DASHBOARD;
+    console.error('OAuth error:', e);
+    showError('OAuth unavailable — use email below, or enable ' + provider + ' in your Privy dashboard.');
   }
 };
 
+// ── Email OTP — step 1: send code ────────────────────────────────────────────
 window.privySendEmail = async function() {
   const email = document.getElementById('privy-email').value.trim();
-  if (!email || !email.includes('@')) { showError('Enter a valid email'); return; }
-  if (!privy) { window.location.href = DASHBOARD; return; }
+  if (!email || !email.includes('@')) { showError('Enter a valid email address'); return; }
+  if (!privy) { showError('Still loading — try again'); return; }
   currentEmail = email;
+  const btn = document.querySelector('#privy-step1 button:last-child');
+  setLoading(btn, true);
   try {
-    await privy.sendEmailOtp({ email });
+    await privy.email.sendCode(email);
     document.getElementById('privy-step1').style.display = 'none';
     document.getElementById('privy-step2').style.display = 'block';
+    document.getElementById('privy-otp').focus();
   } catch(e) {
-    console.error(e);
-    showError('Could not send code. Try again.');
+    console.error('Send code error:', e);
+    showError(e?.message || 'Could not send code — check your email and try again.');
+  } finally {
+    setLoading(btn, false);
   }
 };
 
+// ── Email OTP — step 2: verify ───────────────────────────────────────────────
 window.privyVerifyOtp = async function() {
   const otp = document.getElementById('privy-otp').value.trim();
-  if (otp.length !== 6) { showError('Enter the 6-digit code'); return; }
-  if (!privy) { window.location.href = DASHBOARD; return; }
+  if (otp.length < 6) { showError('Enter the full 6-digit code'); return; }
+  if (!privy) { showError('Still loading — try again'); return; }
+  const btn = document.querySelector('#privy-step2 button:first-child');
+  setLoading(btn, true);
   try {
-    await privy.loginWithEmailOtp({ email: currentEmail, otp });
+    await privy.email.loginWithCode(currentEmail, otp);
     window.location.href = DASHBOARD;
   } catch(e) {
-    console.error(e);
-    showError('Invalid code. Please try again.');
+    console.error('Verify OTP error:', e);
+    showError(e?.message || 'Invalid code — check and try again.');
+  } finally {
+    setLoading(btn, false);
   }
 };
 

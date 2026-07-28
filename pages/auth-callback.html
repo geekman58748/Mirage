@@ -5,44 +5,53 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Mirage — Authenticating...</title>
 <style>
-  body{background:#07080e;color:#f1f3f9;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+  body{background:#07080e;color:#f1f3f9;font-family:Inter,sans-serif;display:flex;
+       align-items:center;justify-content:center;min-height:100vh;margin:0;}
   .box{text-align:center;}
-  .spinner{width:40px;height:40px;border:2px solid rgba(255,255,255,0.1);border-top-color:#4f9fff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px;}
+  .spinner{width:40px;height:40px;border:2px solid rgba(255,255,255,0.1);
+           border-top-color:#4f9fff;border-radius:50%;
+           animation:spin .8s linear infinite;margin:0 auto 20px;}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .err{margin-top:16px;font-size:13px;color:#ff5f57;}
 </style>
 </head>
 <body>
 <div class="box">
-  <div class="spinner"></div>
+  <div class="spinner" id="spinner"></div>
   <div style="font-size:15px;font-weight:600;">Completing sign-in...</div>
   <div style="font-size:13px;color:#8c8f9f;margin-top:6px;">You'll be redirected in a moment</div>
+  <div class="err" id="err" style="display:none"></div>
 </div>
 <script type="module">
 const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 
 async function handleCallback() {
   const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const provider = params.get('privy_oauth_provider') || params.get('provider') || 'google';
+  const code  = params.get('code');
+  const state = params.get('state');
+  // Privy passes the provider in the state or as a separate param
+  const provider = params.get('provider') || localStorage.getItem('privy:oauth_provider') || 'google';
 
   if (!code) {
-    window.location.href = '../index.html';
+    // No code — just go back to landing
+    window.location.replace('../index.html');
     return;
   }
 
   try {
     const { PrivyClient } = await import('https://esm.sh/@privy-io/js-sdk-core');
-    const privy = new PrivyClient({ appId: PRIVY_APP_ID });
-    await privy.loginWithOAuth({
-      provider,
-      code,
-      redirectUri: window.location.origin + window.location.pathname,
-    });
+    const privy = new PrivyClient({ appId: PRIVY_APP_ID, storage: window.localStorage });
+    await privy.oauth.loginWithCode(code, state, provider);
+    window.location.replace('dashboard.html');
   } catch(e) {
     console.error('OAuth callback error:', e);
+    // Still redirect — user may already be authed
+    document.getElementById('spinner').style.display = 'none';
+    const errEl = document.getElementById('err');
+    errEl.textContent = 'Sign-in error: ' + (e?.message || 'unknown');
+    errEl.style.display = 'block';
+    setTimeout(() => window.location.replace('dashboard.html'), 2000);
   }
-  // Redirect to dashboard regardless
-  window.location.href = 'dashboard.html';
 }
 
 handleCallback();
