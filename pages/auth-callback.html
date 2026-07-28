@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Mirage — Authenticating...</title>
+<style>
+  body{background:#07080e;color:#f1f3f9;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+  .box{text-align:center;}
+  .spinner{width:40px;height:40px;border:2px solid rgba(255,255,255,0.1);border-top-color:#4f9fff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spinner"></div>
+  <div style="font-size:15px;font-weight:600;">Completing sign-in...</div>
+  <div style="font-size:13px;color:#8c8f9f;margin-top:6px;">You'll be redirected in a moment</div>
+</div>
+<script type="module">
+const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
+
+async function handleCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const provider = params.get('privy_oauth_provider') || params.get('provider') || 'google';
+
+  if (!code) {
+    window.location.href = '../index.html';
+    return;
+  }
+
+  try {
+    const { PrivyClient } = await import('https://esm.sh/@privy-io/js-sdk-core');
+    const privy = new PrivyClient({ appId: PRIVY_APP_ID });
+    await privy.loginWithOAuth({
+      provider,
+      code,
+      redirectUri: window.location.origin + window.location.pathname,
+    });
+  } catch(e) {
+    console.error('OAuth callback error:', e);
+  }
+  // Redirect to dashboard regardless
+  window.location.href = 'dashboard.html';
+}
+
+handleCallback();
+</script>
+</body>
+</html>

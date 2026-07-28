@@ -720,8 +720,8 @@
             <span class="metric-title">Total Received This Month</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5C15 8.1 13.7 7 12 7s-3 1.1-3 2.5 1.3 2.5 3 2.5 3 1.1 3 2.5-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg>
           </div>
-          <div class="metric-value-huge">
-            $184,920.00
+          <div class="metric-value-huge" id="stat-volume">
+            $0.00
             <span class="currency-tag">USDC</span>
           </div>
           <div class="metric-footer">
@@ -734,8 +734,8 @@
             <span class="metric-title">Payments Processed</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
-          <div class="metric-value-huge">
-            1,402
+          <div class="metric-value-huge" id="stat-count">
+            0
           </div>
           <div class="metric-footer">
             100% swept & auto-closed
@@ -772,37 +772,11 @@
                 <th>Sender</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td style="color:#ffffff;font-weight:600;">$4,250.00 USDC</td>
-                <td style="color:var(--text-muted)">12s ago</td>
-                <td><span style="color:var(--text-secondary)">Forwarded</span></td>
-                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+            <tbody id="live-feed-tbody">
+              <tr id="live-empty-row">
+                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px 0;font-size:13px;">No payments logged yet — run a test transaction to see live data.</td>
               </tr>
-              <tr>
-                <td style="color:#ffffff;font-weight:600;">$890.00 USDC</td>
-                <td style="color:var(--text-muted)">4m ago</td>
-                <td><span style="color:var(--text-secondary)">Closed</span></td>
-                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
-              </tr>
-              <tr>
-                <td style="color:#ffffff;font-weight:600;">$12,500.00 USDC</td>
-                <td style="color:var(--text-muted)">18m ago</td>
-                <td><span style="color:var(--text-secondary)">Closed</span></td>
-                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
-              </tr>
-              <tr>
-                <td style="color:#ffffff;font-weight:600;">$150.00 USDC</td>
-                <td style="color:var(--text-muted)">1h ago</td>
-                <td><span style="color:var(--text-secondary)">Closed</span></td>
-                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
-              </tr>
-              <tr>
-                <td style="color:#ffffff;font-weight:600;">$1,820.00 USDC</td>
-                <td style="color:var(--text-muted)">2h ago</td>
-                <td><span style="color:var(--text-secondary)">Closed</span></td>
-                <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
-              </tr>
+
             </tbody>
           </table>
         </div>
@@ -833,42 +807,25 @@
                 <th>Action</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
+            <tbody id="history-tbody">
+              <tr id="history-empty-row">
+                <td colspan="5" style="color:var(--text-muted);text-align:center;padding:24px 0;font-size:13px;">No payments recorded yet.</td>
+              </tr>
+              <tr style="display:none">
                 <td class="truncated-facade">0x7f83...a9b2</td>
                 <td style="color:#ffffff;font-weight:600;">$4,250.00 USDC</td>
                 <td style="color:var(--text-muted)">2026-07-28 12:24:47</td>
                 <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
                 <td><span class="tag-destroyed">Destroyed</span></td>
               </tr>
-              <tr>
-                <td class="truncated-facade">0x3e19...88c1</td>
                 <td style="color:#ffffff;font-weight:600;">$890.00 USDC</td>
                 <td style="color:var(--text-muted)">2026-07-28 12:20:12</td>
                 <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
                 <td><span class="tag-destroyed">Destroyed</span></td>
               </tr>
-              <tr>
-                <td class="truncated-facade">0x9a44...d120</td>
-                <td style="color:#ffffff;font-weight:600;">$12,500.00 USDC</td>
-                <td style="color:var(--text-muted)">2026-07-28 12:06:30</td>
-                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
-                <td><span class="tag-destroyed">Destroyed</span></td>
-              </tr>
-              <tr>
-                <td class="truncated-facade">0x11b8...99e4</td>
-                <td style="color:#ffffff;font-weight:600;">$150.00 USDC</td>
-                <td style="color:var(--text-muted)">2026-07-28 11:15:00</td>
-                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
-                <td><span class="tag-destroyed">Destroyed</span></td>
-              </tr>
-              <tr>
-                <td class="truncated-facade">0x88c2...e711</td>
-                <td style="color:#ffffff;font-weight:600;">$1,820.00 USDC</td>
-                <td style="color:var(--text-muted)">2026-07-28 10:04:19</td>
-                <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
-                <td><span class="tag-destroyed">Destroyed</span></td>
-              </tr>
+
+
+
             </tbody>
           </table>
         </div>
@@ -1039,5 +996,88 @@
     `;
   }
 </script>
+
+<script>
+// ── API base — update to your deployed Replit URL for production ──────────────
+// e.g. const API_BASE = 'https://api-server.yourname.replit.app/api';
+const API_BASE = window.MIRAGE_API_BASE || '/api';
+
+async function loadStats() {
+  try {
+    const [statsRes, allRes] = await Promise.all([
+      fetch(API_BASE + '/payments/stats'),
+      fetch(API_BASE + '/payments'),
+    ]);
+    const { totalVolume, count, recent } = await statsRes.json();
+    const { payments } = await allRes.json();
+
+    // Update metric cards
+    const volEl = document.getElementById('stat-volume');
+    if (volEl) {
+      volEl.innerHTML = '$' + totalVolume.toFixed(2) + ' <span class="currency-tag">USDC</span>';
+    }
+    const countEl = document.getElementById('stat-count');
+    if (countEl) countEl.textContent = count.toLocaleString();
+
+    // Populate live feed
+    const feedBody = document.getElementById('live-feed-tbody');
+    if (feedBody) {
+      if (recent.length === 0) return;
+      const emptyRow = document.getElementById('live-empty-row');
+      if (emptyRow) emptyRow.remove();
+      feedBody.innerHTML = recent.map(p => {
+        const ago = timeAgo(new Date(p.timestamp));
+        const shortAddr = p.facadeAddress.length > 10
+          ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
+          : p.facadeAddress;
+        return `<tr>
+          <td style="color:#ffffff;font-weight:600;">$${p.amount.toFixed(2)} ${p.currency}</td>
+          <td style="color:var(--text-muted)">${ago}</td>
+          <td><span style="color:var(--emerald)">Confirmed</span></td>
+          <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Populate full history
+    const histBody = document.getElementById('history-tbody');
+    if (histBody && payments.length > 0) {
+      const emptyRow = document.getElementById('history-empty-row');
+      if (emptyRow) emptyRow.remove();
+      histBody.innerHTML = payments.map(p => {
+        const shortAddr = p.facadeAddress.length > 10
+          ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
+          : p.facadeAddress;
+        const ts = new Date(p.timestamp).toLocaleString(undefined, {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        return `<tr>
+          <td class="truncated-facade">${shortAddr}</td>
+          <td style="color:#ffffff;font-weight:600;">$${p.amount.toFixed(2)} ${p.currency}</td>
+          <td style="color:var(--text-muted)">${ts}</td>
+          <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
+          <td><span class="tag-destroyed">Destroyed</span></td>
+        </tr>`;
+      }).join('');
+    }
+  } catch(e) {
+    console.warn('Stats fetch failed:', e);
+  }
+}
+
+function timeAgo(date) {
+  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (secs < 60) return secs + 's ago';
+  if (secs < 3600) return Math.floor(secs / 60) + 'm ago';
+  if (secs < 86400) return Math.floor(secs / 3600) + 'h ago';
+  return Math.floor(secs / 86400) + 'd ago';
+}
+
+// Load on page show + poll every 30s
+loadStats();
+setInterval(loadStats, 30000);
+</script>
+
 </body>
 </html>

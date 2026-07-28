@@ -368,6 +368,27 @@
 <script>
   // Configuration Variables
   const FACADE_ADDRESS = "0x71C7656EC7ab88b098defB751B7401B5f6d89f2A";
+  const PAYMENT_AMOUNT = parseFloat(new URLSearchParams(window.location.search).get('amount') || '1.00');
+  const PAYMENT_CURRENCY = new URLSearchParams(window.location.search).get('currency') || 'USDC';
+  const SESSION_ID = new URLSearchParams(window.location.search).get('session') || '';
+  const API_BASE = window.MIRAGE_API_BASE || '/api';
+
+  async function logPaymentConfirmed() {
+    try {
+      await fetch(API_BASE + '/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: PAYMENT_AMOUNT,
+          currency: PAYMENT_CURRENCY,
+          sessionId: SESSION_ID,
+          facadeAddress: FACADE_ADDRESS,
+        }),
+      });
+    } catch(e) {
+      console.warn('Payment log failed:', e);
+    }
+  }
   let countdownSeconds = 300; // 5 Minutes Default
   let timerInterval = null;
   let webSocketListener = null;
@@ -429,6 +450,7 @@
     else if (stateNumber === 2) {
       clearInterval(timerInterval);
       document.getElementById('stateConfirmed').classList.add('active-state');
+      logPaymentConfirmed(); // ← log real payment to backend
       
       // Flash Green Background
       document.getElementById('greenFlash').classList.add('active');
