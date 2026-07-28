@@ -1029,14 +1029,14 @@ animateStars();
         <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>or<div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
       </div>
       <input id="privy-email" type="email" placeholder="your@email.com" style="width:100%;padding:13px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#f1f3f9;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:10px;" />
-      <button onclick="privySendEmail()" style="width:100%;padding:13px;background:#fff;color:#07080e;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Send Code →</button>
+      <button id="privy-send-btn" onclick="privySendEmail()" style="width:100%;padding:13px;background:#fff;color:#07080e;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Send Code →</button>
     </div>
 
     <!-- Step 2: OTP input -->
     <div id="privy-step2" style="display:none;">
       <div style="text-align:center;margin-bottom:20px;font-size:13px;color:#8c8f9f;">Check your inbox — enter the 6-digit code</div>
       <input id="privy-otp" type="text" maxlength="6" placeholder="000000" style="width:100%;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:22px;font-family:'JetBrains Mono',monospace;text-align:center;outline:none;box-sizing:border-box;letter-spacing:.3em;margin-bottom:12px;" />
-      <button onclick="privyVerifyOtp()" style="width:100%;padding:13px;background:#fff;color:#07080e;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;">Verify &amp; Enter →</button>
+      <button id="privy-verify-btn" onclick="privyVerifyOtp()" style="width:100%;padding:13px;background:#fff;color:#07080e;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;">Verify &amp; Enter →</button>
       <button onclick="document.getElementById('privy-step2').style.display='none';document.getElementById('privy-step1').style.display='block';" style="width:100%;padding:10px;background:none;border:none;color:#8c8f9f;font-size:13px;font-family:inherit;cursor:pointer;margin-top:8px;">← Back</button>
     </div>
 
@@ -1056,90 +1056,112 @@ window.closeSignIn = function() {
   document.body.style.overflow = '';
 };
 </script>
-<script type="module">
-import { PrivyClient } from 'https://esm.sh/@privy-io/js-sdk-core';
 
-const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
-const DASHBOARD = 'pages/dashboard.html';
-const CALLBACK = 'pages/auth-callback.html';
 
-// Static import guarantees privy is ready before any user interaction
-const privy = new PrivyClient({ appId: PRIVY_APP_ID, storage: window.localStorage });
-let currentEmail = '';
 
-// Already have a valid session? Skip straight to dashboard
-if (localStorage.getItem('privy:token')) {
-  window.location.href = DASHBOARD;
-}
+<script>
+(function() {
+  var APP_ID   = 'cms56lvu500030ckz9hxe7lex';
+  var DASHBOARD = 'pages/dashboard.html';
+  var CALLBACK  = 'pages/auth-callback.html';
+  var BASE      = 'https://auth.privy.io/api/v1';
+  var HEADERS   = { 'Content-Type': 'application/json', 'privy-app-id': APP_ID };
+  var email_    = '';
 
-// openSignIn/closeSignIn defined in plain script above
-
-function showError(msg) {
-  const el = document.getElementById('privy-error');
-  el.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
-}
-
-function setLoading(btn, loading) {
-  btn.disabled = loading;
-  btn.style.opacity = loading ? '0.6' : '1';
-}
-
-// ── OAuth (Google / Twitter) — redirect flow ─────────────────────────────────
-window.privyLogin = async function(provider) {
-  const redirectURI = window.location.origin +
-    (window.location.pathname.replace(/[^/]*$/, '')) + CALLBACK;
-  try {
-    const { url } = await privy.oauth.generateURL(provider, redirectURI);
-    window.location.href = url;
-  } catch(e) {
-    console.error('OAuth error:', e);
-    showError('OAuth unavailable — use email below, or enable ' + provider + ' in your Privy dashboard.');
+  /* ── already logged in? ── */
+  if (localStorage.getItem('privy_token')) {
+    window.addEventListener('DOMContentLoaded', function() {
+      // only redirect if they deliberately navigate to landing while logged in
+      // don't auto-redirect so they can still see the page
+    });
   }
-};
 
-// ── Email OTP — step 1: send code ────────────────────────────────────────────
-window.privySendEmail = async function() {
-  const email = document.getElementById('privy-email').value.trim();
-  if (!email || !email.includes('@')) { showError('Enter a valid email address'); return; }
-  currentEmail = email;
-  const btn = document.querySelector('#privy-step1 button:last-child');
-  setLoading(btn, true);
-  try {
-    await privy.email.sendCode(email);
-    document.getElementById('privy-step1').style.display = 'none';
-    document.getElementById('privy-step2').style.display = 'block';
-    document.getElementById('privy-otp').focus();
-  } catch(e) {
-    console.error('Send code error:', e);
-    showError(e?.message || 'Could not send code — check your email and try again.');
-  } finally {
-    setLoading(btn, false);
+  function showError(msg) {
+    var el = document.getElementById('privy-error');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(function(){ el.style.display = 'none'; }, 5000);
   }
-};
 
-// ── Email OTP — step 2: verify ───────────────────────────────────────────────
-window.privyVerifyOtp = async function() {
-  const otp = document.getElementById('privy-otp').value.trim();
-  if (otp.length < 6) { showError('Enter the full 6-digit code'); return; }
-  const btn = document.querySelector('#privy-step2 button:first-child');
-  setLoading(btn, true);
-  try {
-    await privy.email.loginWithCode(currentEmail, otp);
-    window.location.href = DASHBOARD;
-  } catch(e) {
-    console.error('Verify OTP error:', e);
-    showError(e?.message || 'Invalid code — check and try again.');
-  } finally {
-    setLoading(btn, false);
+  function setBusy(id, busy) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = busy;
+    el.style.opacity = busy ? '0.55' : '1';
   }
-};
 
-// Close on backdrop click
-document.getElementById('signinOverlay').addEventListener('click', function(e) {
-  if (e.target === this) window.closeSignIn();
-});
+  /* ── OAuth: Google / Twitter ── */
+  window.privyLogin = function(provider) {
+    var redirectURI = window.location.origin + '/pages/' + CALLBACK.replace('pages/', '');
+    fetch(BASE + '/oauth/init', {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ provider: provider, redirect_uri: redirectURI })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.url) {
+        localStorage.setItem('privy_oauth_provider', provider);
+        window.location.href = d.url;
+      } else {
+        showError(d.message || d.error || 'OAuth init failed — check Privy dashboard has ' + provider + ' enabled.');
+      }
+    })
+    .catch(function(e){ showError('Network error: ' + e.message); });
+  };
+
+  /* ── Email: send code ── */
+  window.privySendEmail = function() {
+    var input = document.getElementById('privy-email');
+    var val   = input ? input.value.trim() : '';
+    if (!val || val.indexOf('@') < 0) { showError('Enter a valid email'); return; }
+    email_ = val;
+    setBusy('privy-send-btn', true);
+    fetch(BASE + '/passwordless/init', {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ email: email_ })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      setBusy('privy-send-btn', false);
+      if (d.success || d.method) {
+        document.getElementById('privy-step1').style.display = 'none';
+        document.getElementById('privy-step2').style.display = 'block';
+        var otp = document.getElementById('privy-otp');
+        if (otp) otp.focus();
+      } else {
+        showError(d.message || d.error || 'Could not send code — is email enabled in your Privy app?');
+      }
+    })
+    .catch(function(e){ setBusy('privy-send-btn', false); showError('Network error: ' + e.message); });
+  };
+
+  /* ── Email: verify code ── */
+  window.privyVerifyOtp = function() {
+    var input = document.getElementById('privy-otp');
+    var code  = input ? input.value.trim() : '';
+    if (code.length < 6) { showError('Enter the 6-digit code'); return; }
+    setBusy('privy-verify-btn', true);
+    fetch(BASE + '/passwordless/authenticate', {
+      method: 'POST',
+      headers: HEADERS,
+      body: JSON.stringify({ email: email_, code: code })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      setBusy('privy-verify-btn', false);
+      if (d.token || d.user) {
+        if (d.token) localStorage.setItem('privy_token', d.token);
+        window.location.href = DASHBOARD;
+      } else {
+        showError(d.message || d.error || 'Invalid code — try again.');
+      }
+    })
+    .catch(function(e){ setBusy('privy-verify-btn', false); showError('Network error: ' + e.message); });
+  };
+})();
 </script>
 
 </body>

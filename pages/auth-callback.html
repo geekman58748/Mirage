@@ -12,7 +12,7 @@
            border-top-color:#4f9fff;border-radius:50%;
            animation:spin .8s linear infinite;margin:0 auto 20px;}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .err{margin-top:16px;font-size:13px;color:#ff5f57;}
+  .err{margin-top:16px;font-size:13px;color:#ff5f57;max-width:320px;}
 </style>
 </head>
 <body>
@@ -22,39 +22,49 @@
   <div style="font-size:13px;color:#8c8f9f;margin-top:6px;">You'll be redirected in a moment</div>
   <div class="err" id="err" style="display:none"></div>
 </div>
-<script type="module">
-const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
+<script>
+(function(){
+  var APP_ID   = 'cms56lvu500030ckz9hxe7lex';
+  var BASE     = 'https://auth.privy.io/api/v1';
+  var HEADERS  = { 'Content-Type': 'application/json', 'privy-app-id': APP_ID };
 
-async function handleCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const code  = params.get('code');
-  const state = params.get('state');
-  // Privy passes the provider in the state or as a separate param
-  const provider = params.get('provider') || localStorage.getItem('privy:oauth_provider') || 'google';
+  var params   = new URLSearchParams(window.location.search);
+  var code     = params.get('code');
+  var state    = params.get('state');
+  var provider = localStorage.getItem('privy_oauth_provider') || 'google';
 
   if (!code) {
-    // No code — just go back to landing
     window.location.replace('../index.html');
     return;
   }
 
-  try {
-    const { PrivyClient } = await import('https://esm.sh/@privy-io/js-sdk-core');
-    const privy = new PrivyClient({ appId: PRIVY_APP_ID, storage: window.localStorage });
-    await privy.oauth.loginWithCode(code, state, provider);
-    window.location.replace('dashboard.html');
-  } catch(e) {
-    console.error('OAuth callback error:', e);
-    // Still redirect — user may already be authed
+  fetch(BASE + '/oauth/authenticate', {
+    method: 'POST',
+    headers: HEADERS,
+    body: JSON.stringify({ code: code, state: state, provider: provider })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.token || d.user) {
+      if (d.token) localStorage.setItem('privy_token', d.token);
+      localStorage.removeItem('privy_oauth_provider');
+      window.location.replace('dashboard.html');
+    } else {
+      document.getElementById('spinner').style.display = 'none';
+      var el = document.getElementById('err');
+      el.textContent = d.message || d.error || 'Sign-in failed. Redirecting...';
+      el.style.display = 'block';
+      setTimeout(function(){ window.location.replace('dashboard.html'); }, 2000);
+    }
+  })
+  .catch(function(e){
     document.getElementById('spinner').style.display = 'none';
-    const errEl = document.getElementById('err');
-    errEl.textContent = 'Sign-in error: ' + (e?.message || 'unknown');
-    errEl.style.display = 'block';
-    setTimeout(() => window.location.replace('dashboard.html'), 2000);
-  }
-}
-
-handleCallback();
+    var el = document.getElementById('err');
+    el.textContent = 'Network error: ' + e.message;
+    el.style.display = 'block';
+    setTimeout(function(){ window.location.replace('dashboard.html'); }, 2000);
+  });
+})();
 </script>
 </body>
 </html>
