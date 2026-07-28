@@ -279,6 +279,7 @@
 </head>
 <body>
 
+<a href="index.html" style="position:fixed;top:16px;left:20px;z-index:999;color:rgba(255,255,255,0.4);font-size:12px;text-decoration:none;font-family:Inter,sans-serif;letter-spacing:.05em">← mirage</a>
 <div class="bg-scene">
   <div class="grid-overlay"></div>
   <div class="light-core"></div>
@@ -360,7 +361,7 @@
     <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:4px;">
       This payment link has expired.
     </p>
-    <button class="btn-request-new" onclick="restartPaymentFlow()">Request New Payment Link</button>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn-request-new" onclick="restartPaymentFlow()">Request New Payment Link</button><a href="dashboard.html" class="btn-request-new" style="text-decoration:none;background:rgba(255,255,255,0.08);color:#f1f3f9;border:1px solid rgba(255,255,255,0.12)">← Back to Dashboard</a></div>
   </div>
 </div>
 

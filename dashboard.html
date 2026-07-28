@@ -631,7 +631,7 @@
 
   <!-- SIDEBAR NAVIGATION -->
   <aside class="sidebar">
-    <div class="brand-header">
+    <div class="brand-header" style="cursor:pointer" onclick="window.location.href='index.html'">
       <div class="brand-logo-mark">
         <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -1033,7 +1033,7 @@
 
       <div style="font-size:11px;color:var(--text-muted)">Disposable Address:</div>
       <div class="facade-address-pill">${randomHex}</div>
-      <button class="btn-action-primary" style="margin-top:16px;padding:9px 16px;font-size:12px;" onclick="navigator.clipboard.writeText('https://pay.mirage.sh/checkout/${randomHex}')">
+      <button class="btn-action-primary" style="margin-top:16px;padding:9px 16px;font-size:12px;" onclick="navigator.clipboard.writeText(window.location.origin + '/checkout.html?session=' + randomHex)">
         Copy Shareable Checkout Link
       </button>
     `;
