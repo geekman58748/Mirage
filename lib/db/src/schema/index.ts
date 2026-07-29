@@ -39,6 +39,7 @@ export const sessionsTable = pgTable("sessions", {
   currency: varchar("currency", { length: 10 }).notNull().default("USDC"),
   merchantId: varchar("merchant_id", { length: 100 }),
   status: varchar("status", { length: 20 }).notNull().default("active"),
+  facadeKeypairB58: text("facade_keypair_b58"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   expiresAt: timestamp("expires_at").notNull(),
 });
