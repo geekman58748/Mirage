@@ -5,7 +5,7 @@ import { db, sessionsTable } from "@workspace/db";
 import { CreateSessionBody } from "@workspace/api-zod";
 import {
   isErConfigured,
-  createAndDelegateFacade,
+  createFacade,
   getFacadeBalance,
   settleFacade,
 } from "../lib/solana.js";
@@ -38,7 +38,7 @@ router.post("/sessions", async (req, res): Promise<void> => {
 
   if (isErConfigured()) {
     try {
-      const result = await createAndDelegateFacade();
+      const result = await createFacade();
       facadeAddress = result.facadeAddress;
       facadeKeypairB58 = result.keypairB58;
     } catch (e) {
