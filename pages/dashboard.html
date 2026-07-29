@@ -1191,7 +1191,13 @@ async function loadStats() {
     if (histBody && payments.length > 0) {
       const emptyRow = document.getElementById('history-empty-row');
       if (emptyRow) emptyRow.remove();
-      histBody.innerHTML = payments.map(p => {
+      // Deduplicate by sessionId — keep the one with a txHash, else first
+      const seen = new Map();
+      payments.forEach(p => {
+        if (!seen.has(p.sessionId) || p.txHash) seen.set(p.sessionId, p);
+      });
+      const unique = Array.from(seen.values());
+      histBody.innerHTML = unique.map(p => {
         const shortAddr = p.facadeAddress.length > 10
           ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
           : p.facadeAddress;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { db, sessionsTable, paymentsTable } from "@workspace/db";
 import { CreateSessionBody } from "@workspace/api-zod";
@@ -91,12 +91,17 @@ router.get("/sessions/:id/balance", async (req, res): Promise<void> => {
 router.post("/sessions/:id/settle", async (req, res): Promise<void> => {
   const [row] = await db.select().from(sessionsTable).where(eq(sessionsTable.id, req.params.id));
   if (!row) { res.status(404).json({ error: "not found" }); return; }
-  if (row.status !== "active") { res.status(409).json({ error: `session is ${row.status}` }); return; }
   if (!row.facadeKeypairB58) { res.status(400).json({ error: "session has no ER keypair (stub mode)" }); return; }
+
+  // Atomically claim the session — only one concurrent call wins
+  const [claimed] = await db.update(sessionsTable)
+    .set({ status: "settled" })
+    .where(and(eq(sessionsTable.id, row.id), eq(sessionsTable.status, "active")))
+    .returning();
+  if (!claimed) { res.status(409).json({ error: `session is ${row.status}` }); return; }
 
   try {
     const result = await settleFacade(row.facadeKeypairB58, row.facadeAddress);
-    await db.update(sessionsTable).set({ status: "settled" }).where(eq(sessionsTable.id, row.id));
     if (row.amount) {
       await db.insert(paymentsTable).values({
         amount: row.amount,

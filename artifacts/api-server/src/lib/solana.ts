@@ -164,6 +164,8 @@ export async function settleFacade(
       mint: usdcMint.toBase58(),
       amount: Number(amount),
       visibility: "private",
+      fromBalance: "base",
+      toBalance: "base",
       gasless: true,
       initAtasIfMissing: true,
       cluster: CLUSTER,
