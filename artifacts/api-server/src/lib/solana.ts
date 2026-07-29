@@ -198,22 +198,16 @@ export async function settleFacade(
       } = {};
       try { data = JSON.parse(rawBody); } catch {}
 
-      // MB returns an unsigned tx — sign with facade keypair and submit
+      // MB returns a partially-signed tx (crank already signed) — add facade sig only
       if (data.transactionBase64) {
         const txBytes = Buffer.from(data.transactionBase64, "base64");
-        let sig: string;
-        try {
-          const vtx = VersionedTransaction.deserialize(txBytes);
-          vtx.sign([facade]);
-          sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: true });
-          await base.confirmTransaction(sig, "confirmed");
-        } catch (vtxErr) {
-          console.warn("[settle] versioned tx failed, trying legacy:", vtxErr);
-          const ltx = Transaction.from(txBytes);
-          ltx.partialSign(facade);
-          sig = await base.sendRawTransaction(ltx.serialize(), { skipPreflight: true });
-          await base.confirmTransaction(sig, "confirmed");
-        }
+        const vtx = VersionedTransaction.deserialize(txBytes);
+        // Sign just the serialized message — preserves crank's existing signature
+        const msgBytes = vtx.message.serialize();
+        const facadeSig = nacl.sign.detached(msgBytes, facade.secretKey);
+        vtx.addSignature(facade.publicKey, Buffer.from(facadeSig));
+        const sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: true });
+        await base.confirmTransaction(sig, "confirmed");
         console.log("[settle] MB private tx signed + confirmed:", sig);
         return { sig, private: true };
       }
