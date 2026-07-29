@@ -2,14 +2,15 @@ import { Router } from "express";
 import { desc, eq, sum } from "drizzle-orm";
 import { db, paymentsTable } from "@workspace/db";
 import { LogPaymentBody } from "@workspace/api-zod";
-import { isErConfigured, isWithdrawConfigured, getVaultBalance, withdrawFromVault } from "../lib/solana.js";
+import { isErConfigured, isWithdrawConfigured, getVaultBalance, getVaultAddress, withdrawFromVault } from "../lib/solana.js";
 
 const router = Router();
 
 router.get("/vault/balance", async (_req, res): Promise<void> => {
   if (!isErConfigured()) { res.json({ balance: null, configured: false }); return; }
   const raw = await getVaultBalance();
-  res.json({ balance: (Number(raw) / 1e6).toFixed(6), configured: true });
+  const { wallet, ata } = getVaultAddress();
+  res.json({ balance: (Number(raw) / 1e6).toFixed(6), configured: true, wallet, ata });
 });
 
 router.post("/vault/withdraw", async (req, res): Promise<void> => {

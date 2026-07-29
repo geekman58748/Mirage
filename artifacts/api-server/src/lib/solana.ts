@@ -19,26 +19,29 @@ export const PROGRAM_ID = new PublicKey(
 );
 
 export function isErConfigured(): boolean {
-  return !!(
-    process.env.SERVER_KEYPAIR &&
-    process.env.MERCHANT_USDC_ATA &&
-    process.env.USDC_MINT
-  );
+  return !!(process.env.SERVER_KEYPAIR && process.env.USDC_MINT);
 }
 
+// Withdrawals always work — server IS the vault owner
 export function isWithdrawConfigured(): boolean {
-  return !!(process.env.VAULT_KEYPAIR && isErConfigured());
+  return isErConfigured();
 }
 
 function cfg() {
+  const server = Keypair.fromSecretKey(bs58.decode(process.env.SERVER_KEYPAIR!));
+  const usdcMint = new PublicKey(process.env.USDC_MINT!);
+  // Vault = server's own USDC ATA. No separate MERCHANT_USDC_ATA needed.
+  const merchantAta = process.env.MERCHANT_USDC_ATA
+    ? new PublicKey(process.env.MERCHANT_USDC_ATA)
+    : getAssociatedTokenAddressSync(usdcMint, server.publicKey);
   return {
-    usdcMint: new PublicKey(process.env.USDC_MINT!),
-    merchantAta: new PublicKey(process.env.MERCHANT_USDC_ATA!),
+    usdcMint,
+    merchantAta,
     base: new Connection(
       process.env.SOLANA_RPC ?? "https://api.devnet.solana.com",
       "confirmed"
     ),
-    server: Keypair.fromSecretKey(bs58.decode(process.env.SERVER_KEYPAIR!)),
+    server,
   };
 }
 
@@ -125,20 +128,22 @@ export async function settleFacade(
   return sig;
 }
 
+/** Returns the server's wallet address and its USDC ATA (the vault). */
+export function getVaultAddress(): { wallet: string; ata: string } {
+  const { server, merchantAta } = cfg();
+  return { wallet: server.publicKey.toBase58(), ata: merchantAta.toBase58() };
+}
+
 /**
  * Withdraws USDC from the merchant vault to a destination wallet.
- * `destination` can be either a wallet address (ATA is derived automatically)
- * or an existing USDC token account address.
- * Requires VAULT_KEYPAIR env var — the base58 private key of the wallet
- * that owns MERCHANT_USDC_ATA (i.e. the vault wallet's secret key).
+ * Server keypair IS the vault owner — no extra env var needed.
  */
 export async function withdrawFromVault(
   destination: string,
   amount: bigint
 ): Promise<string> {
-  if (!process.env.VAULT_KEYPAIR) throw new Error("VAULT_KEYPAIR not configured");
   const { usdcMint, merchantAta, base, server } = cfg();
-  const vault = Keypair.fromSecretKey(bs58.decode(process.env.VAULT_KEYPAIR));
+  const vault = server; // server wallet owns the vault ATA
 
   const acct = await getAccount(base, merchantAta);
   const available = acct.amount;

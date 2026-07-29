@@ -1123,9 +1123,15 @@ async function withdrawFunds() {
 async function loadVaultBalance() {
   try {
     const res = await fetch(API_BASE + '/api/vault/balance');
-    const { balance, configured } = await res.json();
+    const { balance, configured, ata } = await res.json();
     const el = document.getElementById('vault-balance');
     if (el) el.textContent = configured && balance != null ? parseFloat(balance).toFixed(2) : '—';
+    if (ata) {
+      const addrEl = document.getElementById('vault-addr-text');
+      if (addrEl) addrEl.textContent = ata;
+      // store for copy
+      window._vaultAta = ata;
+    }
   } catch(e) { console.warn('Vault balance fetch failed:', e); }
 }
 
