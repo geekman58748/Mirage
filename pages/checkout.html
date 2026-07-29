@@ -506,27 +506,24 @@
     }
   }
 
-  // REAL INTEGRATION POINT: Connect your WebSocket/RPC endpoint here
+  let _pollInterval = null;
   function listenForOnChainPayment() {
-    /* 
-      Example Real Setup:
-      const ws = new WebSocket('wss://your-payment-indexer.com');
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.status === 'CONFIRMED' && data.address === FACADE_ADDRESS) {
+    if (!SESSION_ID) return;
+    clearInterval(_pollInterval);
+    _pollInterval = setInterval(async () => {
+      if (!document.getElementById('stateWaiting').classList.contains('active-state')) {
+        clearInterval(_pollInterval); return;
+      }
+      try {
+        const r = await fetch(API_BASE + '/api/sessions/' + SESSION_ID + '/balance');
+        const d = await r.json();
+        if (d.er && d.balance && BigInt(d.balance) >= BigInt(Math.round((PAYMENT_AMOUNT || 0) * 1e6))) {
+          clearInterval(_pollInterval);
+          await fetch(API_BASE + '/api/sessions/' + SESSION_ID + '/settle', { method: 'POST' });
           transitionToState(2);
         }
-      };
-    */
-
-    // FOR DEMO: Automatically simulates payment confirmation after 12 seconds
-    console.log("Listening for RPC / WebSocket payment events for:", FACADE_ADDRESS);
-    setTimeout(() => {
-      // Trigger confirmation if still waiting
-      if (document.getElementById('stateWaiting').classList.contains('active-state')) {
-        transitionToState(2);
-      }
-    }, 12000);
+      } catch(e) {}
+    }, 5000);
   }
 
   function restartPaymentFlow() {
