@@ -904,12 +904,13 @@
           </div>
         </div>
 
-        <div style="margin-top:10px;">
-          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:4px;">Withdraw to (your login wallet):</span>
-          <span id="withdraw-dest-text" style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">—</span>
+        <div style="margin-top:16px;width:100%;max-width:420px;margin-left:auto;margin-right:auto;">
+          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">Withdraw to wallet address:</span>
+          <input id="withdraw-dest-input" type="text" placeholder="Paste any Solana wallet address…"
+            style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:var(--font-mono);outline:none;" />
         </div>
 
-        <button class="btn-action-primary" style="max-width:200px;margin:20px auto 0;" onclick="withdrawFunds()">
+        <button class="btn-action-primary" style="max-width:200px;margin:16px auto 0;" onclick="withdrawFunds()">
           Withdraw Funds
         </button>
         <div id="withdraw-status" style="font-size:12px;margin-top:10px;min-height:18px;text-align:center;"></div>
@@ -1017,13 +1018,12 @@ const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 
 // ── Wallet: load from storage, or create on-demand via Privy ─────────────────
 function showWalletAddr(addr) {
-  // Only update sidebar pill — vault-addr-text is set by loadVaultBalance from the API
   const short = addr.slice(0, 6) + '…' + addr.slice(-4);
   const pill = document.getElementById('sidebar-wallet');
   if (pill) { pill.textContent = short; pill.style.display = 'block'; }
-  // Show as withdrawal destination
-  const destEl = document.getElementById('withdraw-dest-text');
-  if (destEl) destEl.textContent = addr.slice(0,6) + '…' + addr.slice(-4) + ' (full: ' + addr + ')';
+  // Pre-fill withdraw input with Privy wallet as convenience default
+  const input = document.getElementById('withdraw-dest-input');
+  if (input && !input.value) input.value = addr;
 }
 
 async function loadWallet() {
@@ -1111,10 +1111,10 @@ loadWallet();
 
 async function withdrawFunds() {
   const statusEl = document.getElementById('withdraw-status');
-  const addr = localStorage.getItem('privy_wallet');
-  if (!addr) { if(statusEl) statusEl.textContent = 'No wallet loaded — connect first'; return; }
+  const input = document.getElementById('withdraw-dest-input');
+  const addr = (input ? input.value.trim() : '') || localStorage.getItem('privy_wallet');
+  if (!addr) { if(statusEl) statusEl.textContent = 'Paste a destination wallet address first'; return; }
 
-  // Derive USDC ATA from the destination wallet address
   if(statusEl) statusEl.textContent = 'Requesting withdrawal…';
   try {
     const res = await fetch(API_BASE + '/api/vault/withdraw', {
