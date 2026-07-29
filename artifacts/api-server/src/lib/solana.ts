@@ -3,6 +3,7 @@ import {
   Keypair,
   PublicKey,
   Transaction,
+  VersionedTransaction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import {
@@ -197,22 +198,22 @@ export async function settleFacade(
       } = {};
       try { data = JSON.parse(rawBody); } catch {}
 
-      // MB returns an unsigned tx that we must sign + submit
+      // MB returns an unsigned tx — sign with facade keypair and submit
       if (data.transactionBase64) {
-        const { Transaction: SolTx, VersionedTransaction } = await import("@solana/web3.js");
         const txBytes = Buffer.from(data.transactionBase64, "base64");
         let sig: string;
         try {
-          // Try as versioned first, fall back to legacy
           const vtx = VersionedTransaction.deserialize(txBytes);
           vtx.sign([facade]);
-          sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: false });
-        } catch {
-          const ltx = SolTx.from(txBytes);
+          sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: true });
+          await base.confirmTransaction(sig, "confirmed");
+        } catch (vtxErr) {
+          console.warn("[settle] versioned tx failed, trying legacy:", vtxErr);
+          const ltx = Transaction.from(txBytes);
           ltx.partialSign(facade);
-          sig = await base.sendRawTransaction(ltx.serialize(), { skipPreflight: false });
+          sig = await base.sendRawTransaction(ltx.serialize(), { skipPreflight: true });
+          await base.confirmTransaction(sig, "confirmed");
         }
-        await base.confirmTransaction(sig, "confirmed");
         console.log("[settle] MB private tx signed + confirmed:", sig);
         return { sig, private: true };
       }
