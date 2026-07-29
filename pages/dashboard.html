@@ -928,23 +928,18 @@
           <h1>API Credentials</h1>
           <p>Integrate MiragePay facade generation into custom checkouts</p>
         </div>
-        <button class="btn-action-primary" style="width:auto;padding:8px 16px;">+ New API Key</button>
+        <button class="btn-action-primary" style="width:auto;padding:8px 16px;" onclick="createApiKey()">+ New API Key</button>
       </div>
 
-      <div class="glass-card key-card">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px">LIVE PRODUCTION KEY</div>
-          <div class="key-val">mrg_live_99d12a84e09117c2f88a</div>
-        </div>
-        <button class="btn-revoke">Revoke</button>
+      <div id="api-keys-list">
+        <div style="color:var(--text-muted);font-size:13px;padding:12px 0;">Loading keys…</div>
       </div>
-
-      <div class="glass-card key-card">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px">SANDBOX TEST KEY</div>
-          <div class="key-val">mrg_test_00a18471f98124cc11e0</div>
-        </div>
-        <button class="btn-revoke">Revoke</button>
+      <!-- New key modal -->
+      <div id="new-key-modal" style="display:none;margin-top:16px;" class="glass-card" style="padding:20px;">
+        <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px;">New Key Created — Copy Now</div>
+        <div id="new-key-val" class="key-val" style="word-break:break-all;"></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">This key will not be shown again.</div>
+        <button onclick="document.getElementById('new-key-modal').style.display='none'; loadApiKeys();" style="margin-top:10px;padding:6px 14px;background:var(--glass-bg);border:1px solid var(--glass-border);color:#fff;border-radius:6px;cursor:pointer;font-size:12px;">Done</button>
       </div>
     </div>
 
@@ -981,19 +976,19 @@
     preview.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Creating session…</div>';
 
     try {
-      const res = await fetch(API_BASE + '/sessions/create', {
+      const res = await fetch(API_BASE + '/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           merchantId: localStorage.getItem('privy_user_id') || 'anon',
-          amount: amountRaw || null,
+          amount: amountRaw ? parseFloat(amountRaw) : null,
           currency: 'USDC',
           label: label || 'Untitled',
+          expiryMinutes: parseInt(document.querySelector('input[name="expiry"]:checked')?.value || '15') || 15,
         }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'API error');
-      const { session } = data;
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'API error'); }
+      const session = await res.json();
       const checkoutURL = window.location.origin + '/pages/checkout.html?session=' + session.id;
       const amountLabel = session.amount ? '$' + session.amount + ' USDC' : 'Open Amount';
 
@@ -1016,7 +1011,7 @@
 </script>
 
 <script>
-const API_BASE = window.MIRAGE_API_BASE || 'https://22b7349e-5ba1-4402-bccf-ef0b926290a2-00-2zbl2p1h7lrxj.janeway.replit.dev/api';
+const API_BASE = (typeof window.MIRAGE_API_BASE !== 'undefined' ? window.MIRAGE_API_BASE : '') || '';
 const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 
 // ── Auth gate ─────────────────────────────────────────────────────────────────
@@ -1116,16 +1111,16 @@ async function loadStats() {
       fetch(API_BASE + '/payments/stats'),
       fetch(API_BASE + '/payments'),
     ]);
-    const { totalVolume, count, recent } = await statsRes.json();
-    const { payments } = await allRes.json();
+    const { totalUSDC, totalPayments, recent } = await statsRes.json();
+    const payments = await allRes.json();
 
     // Update metric cards
     const volEl = document.getElementById('stat-volume');
     if (volEl) {
-      volEl.innerHTML = '$' + totalVolume.toFixed(2) + ' <span class="currency-tag">USDC</span>';
+      volEl.innerHTML = '$' + (totalUSDC || 0).toFixed(2) + ' <span class="currency-tag">USDC</span>';
     }
     const countEl = document.getElementById('stat-count');
-    if (countEl) countEl.textContent = count.toLocaleString();
+    if (countEl) countEl.textContent = (totalPayments || 0).toLocaleString();
 
     // Populate live feed
     const feedBody = document.getElementById('live-feed-tbody');
@@ -1134,12 +1129,12 @@ async function loadStats() {
       const emptyRow = document.getElementById('live-empty-row');
       if (emptyRow) emptyRow.remove();
       feedBody.innerHTML = recent.map(p => {
-        const ago = timeAgo(new Date(p.timestamp));
-        const shortAddr = p.facadeAddress.length > 10
+        const ago = timeAgo(new Date(p.createdAt));
+        const shortAddr = (p.facadeAddress || '').length > 10
           ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
           : p.facadeAddress;
         return `<tr>
-          <td style="color:#ffffff;font-weight:600;">$${p.amount.toFixed(2)} ${p.currency}</td>
+          <td style="color:#ffffff;font-weight:600;">$${parseFloat(p.amount).toFixed(2)} ${p.currency}</td>
           <td style="color:var(--text-muted)">${ago}</td>
           <td><span style="color:var(--emerald)">Confirmed</span></td>
           <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
@@ -1156,13 +1151,13 @@ async function loadStats() {
         const shortAddr = p.facadeAddress.length > 10
           ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
           : p.facadeAddress;
-        const ts = new Date(p.timestamp).toLocaleString(undefined, {
+        const ts = new Date(p.createdAt).toLocaleString(undefined, {
           year: 'numeric', month: '2-digit', day: '2-digit',
           hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
         return `<tr>
           <td class="truncated-facade">${shortAddr}</td>
-          <td style="color:#ffffff;font-weight:600;">$${p.amount.toFixed(2)} ${p.currency}</td>
+          <td style="color:#ffffff;font-weight:600;">$${parseFloat(p.amount).toFixed(2)} ${p.currency}</td>
           <td style="color:var(--text-muted)">${ts}</td>
           <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
           <td><span class="tag-destroyed">Destroyed</span></td>
@@ -1185,6 +1180,63 @@ function timeAgo(date) {
 // Load on page show + poll every 30s
 loadStats();
 setInterval(loadStats, 30000);
+
+// ── API Keys ─────────────────────────────────────────────────────────────────
+async function loadApiKeys() {
+  const merchantId = localStorage.getItem('privy_user_id') || 'anon';
+  const list = document.getElementById('api-keys-list');
+  if (!list) return;
+  try {
+    const res = await fetch(API_BASE + '/api-keys?merchantId=' + encodeURIComponent(merchantId));
+    const keys = await res.json();
+    if (!Array.isArray(keys) || keys.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">No keys yet — create one above.</div>';
+      return;
+    }
+    list.innerHTML = keys.map(k => `
+      <div class="glass-card key-card" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">${k.label}</div>
+          <div class="key-val">${k.keyPrefix}…</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Created ${new Date(k.createdAt).toLocaleDateString()}</div>
+        </div>
+        <button class="btn-revoke" onclick="revokeApiKey(${k.id})">Revoke</button>
+      </div>
+    `).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:#f43f5e;font-size:13px;">Failed to load keys.</div>';
+  }
+}
+
+async function createApiKey() {
+  const label = prompt('Key label (e.g. "Production", "Test"):', 'Production') || 'Default';
+  const merchantId = localStorage.getItem('privy_user_id') || 'anon';
+  try {
+    const res = await fetch(API_BASE + '/api-keys', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ merchantId, label }),
+    });
+    const data = await res.json();
+    const modal = document.getElementById('new-key-modal');
+    const keyVal = document.getElementById('new-key-val');
+    if (modal && keyVal) {
+      keyVal.textContent = data.rawKey;
+      modal.style.display = 'block';
+    }
+  } catch(e) {
+    alert('Failed to create key: ' + e.message);
+  }
+}
+
+async function revokeApiKey(id) {
+  if (!confirm('Revoke this key? This cannot be undone.')) return;
+  await fetch(API_BASE + '/api-keys/' + id, { method: 'DELETE' });
+  loadApiKeys();
+}
+
+// Load keys when on that view
+document.querySelector('[onclick*="api-keys"]')?.addEventListener('click', loadApiKeys);
 </script>
 
 </body>

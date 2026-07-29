@@ -369,10 +369,10 @@
   // Configuration Variables
   let FACADE_ADDRESS = 'Generating address…';
   const params           = new URLSearchParams(window.location.search);
-  const PAYMENT_AMOUNT   = parseFloat(params.get('amount') || '1.00');
+  let PAYMENT_AMOUNT     = parseFloat(params.get('amount') || '0');
   const PAYMENT_CURRENCY = params.get('currency') || 'USDC';
   const SESSION_ID       = params.get('session') || '';
-  const API_BASE         = window.MIRAGE_API_BASE || 'https://22b7349e-5ba1-4402-bccf-ef0b926290a2-00-2zbl2p1h7lrxj.janeway.replit.dev/api';
+  const API_BASE         = (typeof window.MIRAGE_API_BASE !== 'undefined' ? window.MIRAGE_API_BASE : '') || '';
 
   // Pull real facade address from session API
   (async function loadSession() {
@@ -380,8 +380,8 @@
     try {
       const res  = await fetch(API_BASE + '/sessions/' + SESSION_ID);
       const data = await res.json();
-      if (data.session && data.session.facadeAddress) {
-        FACADE_ADDRESS = data.session.facadeAddress;
+      if (data.facadeAddress) {
+        FACADE_ADDRESS = data.facadeAddress;
         const addrEl = document.getElementById('facadeAddr');
         if (addrEl) addrEl.innerText = FACADE_ADDRESS;
         const confirmedEl = document.getElementById('confirmedFacadeAddr');
@@ -390,6 +390,13 @@
           const qrEl = document.getElementById('qrcode');
           if (qrEl) { qrEl.innerHTML = ''; new QRCode(qrEl, { text: FACADE_ADDRESS, width: 160, height: 160, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M }); }
         }
+        // Update amount display from session
+        if (data.amount) {
+          const amtEl = document.querySelector('.amount-display');
+          if (amtEl) amtEl.innerHTML = parseFloat(data.amount).toFixed(2) + ' <span>USDC</span>';
+        }
+        // Set timer from session expiry
+        if (data.expiryMinutes) countdownSeconds = data.expiryMinutes * 60;
       }
     } catch(e) { console.warn('Session load failed:', e); }
   })();
@@ -400,9 +407,9 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: PAYMENT_AMOUNT,
+          amount: PAYMENT_AMOUNT || 0,
           currency: PAYMENT_CURRENCY,
-          sessionId: SESSION_ID,
+          sessionId: SESSION_ID || null,
           facadeAddress: FACADE_ADDRESS,
         }),
       });
