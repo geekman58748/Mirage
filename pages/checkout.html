@@ -372,7 +372,7 @@
   let PAYMENT_AMOUNT     = parseFloat(params.get('amount') || '0');
   const PAYMENT_CURRENCY = params.get('currency') || 'USDC';
   const SESSION_ID       = params.get('session') || '';
-  const API_BASE         = (typeof window.MIRAGE_API_BASE !== 'undefined' ? window.MIRAGE_API_BASE : '') || '';
+  const API_BASE = 'https://mirage-production-6dfc.up.railway.app';
 
   // Pull real facade address from session API
   (async function loadSession() {
