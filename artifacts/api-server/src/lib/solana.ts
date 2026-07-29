@@ -195,14 +195,36 @@ export async function settleFacade(
         transactionBase64?: string;
         requiredSigners?: string[];
         sendTo?: string;
+        fees?: { lamports?: string; tokens?: string };
       } = {};
       try { data = JSON.parse(rawBody); } catch {}
 
-      // MB returns a partially-signed tx (crank already signed) — add facade sig only
-      if (data.transactionBase64) {
-        const txBytes = Buffer.from(data.transactionBase64, "base64");
+      // MB charges fees ON TOP of amount — if fee + amount > facade balance, retry with adjusted amount
+      let txBase64 = data.transactionBase64;
+      if (txBase64 && data.fees?.tokens) {
+        const feeTokens = BigInt(data.fees.tokens);
+        if (feeTokens >= amount) {
+          console.warn("[settle] MB fee exceeds balance, falling back to SPL");
+          txBase64 = undefined; // skip MB, fall through to SPL
+        } else if (feeTokens > 0n) {
+          const adjustedAmount = amount - feeTokens;
+          console.log(`[settle] Adjusting MB amount by fee ${feeTokens}: ${amount} → ${adjustedAmount}`);
+          const res2 = await fetch(`${MB_API}/v1/spl/transfer`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ ...payload, amount: Number(adjustedAmount) }),
+          });
+          if (res2.ok) {
+            const data2: { transactionBase64?: string } = await res2.json();
+            txBase64 = data2.transactionBase64 ?? txBase64;
+          }
+        }
+      }
+
+      // Sign the MB tx (crank pre-signed; we add facade sig only)
+      if (txBase64) {
+        const txBytes = Buffer.from(txBase64, "base64");
         const vtx = VersionedTransaction.deserialize(txBytes);
-        // Sign just the serialized message — preserves crank's existing signature
         const msgBytes = vtx.message.serialize();
         const facadeSig = nacl.sign.detached(msgBytes, facade.secretKey);
         vtx.addSignature(facade.publicKey, Buffer.from(facadeSig));
