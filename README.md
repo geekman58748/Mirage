@@ -1,28 +1,100 @@
 # Mirage — Private Crypto Merchant Gateway
 
-Zero-trace Solana payments via ephemeral rollups (MagicBlock). Merchants receive funds privately through facade addresses — no on-chain link between payer and merchant vault.
+> One-time ephemeral addresses. Zero on-chain link between buyer and merchant.
 
-## Pages
+---
 
-| File | Purpose |
-|------|---------|
-| `index.html` | Landing page |
-| `onboarding.html` | Merchant signup + wallet setup (Privy) |
-| `dashboard.html` | Merchant command center — generate payment links, view vault, manage API keys |
-| `checkout.html` | Buyer-facing ephemeral checkout |
+## What's built
 
-## Architecture
+| Layer | Status | Notes |
+|---|---|---|
+| Landing page (`index.html`) | ✅ Working | Privy auth (email OTP + Google/Twitter OAuth) |
+| Merchant dashboard (`pages/dashboard.html`) | ✅ Working | Live stats + payment feed from API |
+| Buyer checkout (`pages/checkout.html`) | ✅ Working | URL-param driven; logs real payment on confirm |
+| OAuth callback (`pages/auth-callback.html`) | ✅ Working | Exchanges code → token, redirects to dashboard |
+| Express API (`artifacts/api-server`) | ✅ Running | In-memory ledger; resets on restart |
 
-- **MerchantVault** — on-chain account storing merchant's facade address and settlement config
-- **PaymentSession** — ephemeral rollup account (MagicBlock ER) created per transaction
-- **Privacy model** — buyer pays facade address (ATA PDA owner), funds settle to vault off-chain, zero mainnet trace
+---
 
 ## Stack
 
-- Frontend: Pure HTML/CSS/JS (Privy for social login + embedded wallets)
-- Program: Anchor (Solana) — `MerchantVault`, `PaymentSession` accounts
-- Ephemeral layer: MagicBlock SDK
+- **Frontend** — pure HTML/CSS/JS, no build step, deployed to Netlify via GitHub push to `main`
+- **Auth** — [Privy](https://privy.io) App ID `cms56lvu500030ckz9hxe7lex`, direct REST API calls (no SDK)
+- **Payments API** — Replit Express (`artifacts/api-server`), in-memory store for now
+- **Blockchain** — Solana (devnet for now); MagicBlock ephemeral rollups planned
 
-## Deploy
+---
 
-Connected to Netlify — pushes to `main` deploy automatically.
+## Auth implementation
+
+Auth uses **direct `fetch` calls to Privy's REST API** — no SDK, no CDN imports.
+
+```
+POST https://auth.privy.io/api/v1/passwordless/init          → send email OTP
+POST https://auth.privy.io/api/v1/passwordless/authenticate  → verify code → get token
+POST https://auth.privy.io/api/v1/oauth/init                 → get Google/Twitter redirect URL
+POST https://auth.privy.io/api/v1/oauth/authenticate         → exchange OAuth code → get token
+```
+
+Token is stored in `localStorage` as `privy_token`. Dashboard reads it to gate access.
+
+**Privy dashboard requirements** (`dashboard.privy.io`):
+- Email, Google, Twitter login methods must be toggled **on**
+- Your Netlify URL must be in **Allowed Origins**
+
+---
+
+## API routes
+
+Base URL: set `window.MIRAGE_API_BASE` or falls back to `/api` (works proxied in Replit dev).
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/health` | Liveness check |
+| `POST` | `/api/payments` | Log a payment `{ amount, currency, session, txHash? }` |
+| `GET` | `/api/payments` | Full payment ledger |
+| `GET` | `/api/payments/stats` | Totals + 10 most recent payments |
+
+---
+
+## Deploying
+
+- **Frontend** → push to `main`; Netlify auto-deploys.
+- **API** → runs on Replit (`artifacts/api-server`). Set `MIRAGE_API_BASE` in the frontend to the Replit dev domain when testing from Netlify.
+
+---
+
+## What's next (proposed tasks)
+
+### Task 1 — MagicBlock ephemeral sessions ⬅ do this first
+Wire `POST /api/sessions/create` to generate a real one-time facade address per checkout via the MagicBlock SDK. Update `checkout.html` to pull the address from the API instead of the hardcoded placeholder. **This is the core privacy feature — nothing is actually private yet.**
+
+### Task 2 — Anchor program: MerchantVault
+On-chain identity for merchants. `initialize_merchant` instruction creates a `MerchantVault` PDA that owns sessions. `close_session` settles funds and closes the ephemeral account. Requires Rust/Anchor toolchain.
+
+### Task 3 — Mobile companion app
+Expo artifact for merchants: monitor live payments and generate shareable checkout links on the go.
+
+---
+
+## File structure
+
+```
+/
+├── index.html                  # Landing + sign-in modal
+├── pages/
+│   ├── dashboard.html          # Merchant portal
+│   ├── checkout.html           # Buyer-facing payment page
+│   └── auth-callback.html      # OAuth redirect handler
+├── assets/
+│   ├── css/                    # Stylesheets
+│   ├── js/                     # JS modules
+│   └── img/                    # Images
+├── artifacts/
+│   └── api-server/             # Replit Express API
+│       └── src/routes/
+│           ├── payments.ts     # Payment log endpoints
+│           └── index.ts        # Router mount
+├── netlify.toml                # SPA redirect rule
+└── README.md
+```
