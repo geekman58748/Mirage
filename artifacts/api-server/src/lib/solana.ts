@@ -166,7 +166,6 @@ export async function settleFacade(
       visibility: "private",
       fromBalance: "base",
       toBalance: "base",
-      gasless: true,
       initAtasIfMissing: true,
       cluster: CLUSTER,
     };
