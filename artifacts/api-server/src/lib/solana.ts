@@ -158,35 +158,39 @@ export async function settleFacade(
   try {
     const token = await getMbToken(facade);
 
+    const payload = {
+      from: facade.publicKey.toBase58(),
+      to: server.publicKey.toBase58(),
+      mint: usdcMint.toBase58(),
+      amount: Number(amount),
+      visibility: "private",
+      gasless: true,
+      initAtasIfMissing: true,
+      cluster: CLUSTER,
+    };
+    console.log("[settle] MB transfer payload:", JSON.stringify(payload));
+
     const res = await fetch(`${MB_API}/v1/spl/transfer`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        from: facade.publicKey.toBase58(),
-        to: server.publicKey.toBase58(),   // server wallet; API derives ATA
-        mint: usdcMint.toBase58(),
-        amount: Number(amount),
-        visibility: "private",
-        fromBalance: "base",
-        toBalance: "base",
-        gasless: true,
-        initAtasIfMissing: true,
-        cluster: CLUSTER,
-      }),
+      body: JSON.stringify(payload),
     });
 
+    const rawBody = await res.text();
+    console.log("[settle] MB response status:", res.status, "body:", rawBody);
+
     if (res.ok) {
-      const data = await res.json() as { signature?: string; sig?: string; txId?: string };
+      let data: { signature?: string; sig?: string; txId?: string } = {};
+      try { data = JSON.parse(rawBody); } catch {}
       const sig = data.signature ?? data.sig ?? data.txId ?? "mb-private";
-      console.log("[settle] MagicBlock private transfer:", sig);
+      console.log("[settle] MagicBlock private transfer sig:", sig);
       return { sig, private: true };
     }
 
-    const errText = await res.text();
-    console.warn("[settle] MB API failed, falling back:", res.status, errText);
+    console.warn("[settle] MB API failed, falling back:", res.status, rawBody);
   } catch (mbErr) {
     console.warn("[settle] MB API error, falling back:", mbErr);
   }
