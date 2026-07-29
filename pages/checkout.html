@@ -367,11 +367,32 @@
 
 <script>
   // Configuration Variables
-  const FACADE_ADDRESS = "0x71C7656EC7ab88b098defB751B7401B5f6d89f2A";
-  const PAYMENT_AMOUNT = parseFloat(new URLSearchParams(window.location.search).get('amount') || '1.00');
-  const PAYMENT_CURRENCY = new URLSearchParams(window.location.search).get('currency') || 'USDC';
-  const SESSION_ID = new URLSearchParams(window.location.search).get('session') || '';
-  const API_BASE = window.MIRAGE_API_BASE || '/api';
+  let FACADE_ADDRESS = 'Generating address…';
+  const params           = new URLSearchParams(window.location.search);
+  const PAYMENT_AMOUNT   = parseFloat(params.get('amount') || '1.00');
+  const PAYMENT_CURRENCY = params.get('currency') || 'USDC';
+  const SESSION_ID       = params.get('session') || '';
+  const API_BASE         = window.MIRAGE_API_BASE || 'https://22b7349e-5ba1-4402-bccf-ef0b926290a2-00-2zbl2p1h7lrxj.janeway.replit.dev/api';
+
+  // Pull real facade address from session API
+  (async function loadSession() {
+    if (!SESSION_ID) return;
+    try {
+      const res  = await fetch(API_BASE + '/sessions/' + SESSION_ID);
+      const data = await res.json();
+      if (data.session && data.session.facadeAddress) {
+        FACADE_ADDRESS = data.session.facadeAddress;
+        const addrEl = document.getElementById('facadeAddr');
+        if (addrEl) addrEl.innerText = FACADE_ADDRESS;
+        const confirmedEl = document.getElementById('confirmedFacadeAddr');
+        if (confirmedEl) confirmedEl.innerText = FACADE_ADDRESS;
+        if (typeof QRCode !== 'undefined') {
+          const qrEl = document.getElementById('qrcode');
+          if (qrEl) { qrEl.innerHTML = ''; new QRCode(qrEl, { text: FACADE_ADDRESS, width: 160, height: 160, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M }); }
+        }
+      }
+    } catch(e) { console.warn('Session load failed:', e); }
+  })();
 
   async function logPaymentConfirmed() {
     try {

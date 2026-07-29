@@ -692,13 +692,15 @@
     </div>
 
     <div class="sidebar-footer">
-      <div class="privacy-status-widget">
+      <div class="privacy-status-widget" style="margin-bottom:10px;">
         <div class="pulse-node"></div>
         <div style="display:flex;flex-direction:column;">
           <span style="font-size:11px;font-weight:600;color:var(--text-primary);">Zero-Exposure</span>
           <span style="font-size:10px;color:var(--text-muted);">Shield Active</span>
         </div>
       </div>
+      <div id="sidebar-wallet" style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);padding:6px 8px;background:#08090d;border:1px solid var(--border-subtle);border-radius:6px;margin-bottom:8px;display:none;word-break:break-all;cursor:pointer;" title="Click to copy" onclick="copyWallet()"></div>
+      <button onclick="doLogout()" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(244,63,94,0.3);border-radius:6px;color:#f43f5e;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(244,63,94,0.08)'" onmouseout="this.style.background='transparent'">Sign Out</button>
     </div>
   </aside>
 
@@ -906,9 +908,10 @@
         </div>
 
         <div style="margin-top:12px;">
-          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">Master Vault Address:</span>
-          <div class="vault-address-container">
-            <span>0x9fA2...8b11c002A99d4e</span>
+          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">Master Vault Address (Privy Embedded Wallet):</span>
+          <div class="vault-address-container" id="vault-addr-box" style="cursor:pointer;" title="Click to copy" onclick="copyWallet()">
+            <span id="vault-addr-text">Loading wallet…</span>
+            <span id="vault-copy-icon" style="margin-left:8px;font-size:11px;color:var(--text-muted)">⎘</span>
           </div>
         </div>
 
@@ -970,37 +973,108 @@
     btnElement.classList.add('active');
   }
 
-  function handleGenerateLink(e) {
+  async function handleGenerateLink(e) {
     e.preventDefault();
-    const amount = document.getElementById('link-amount').value || 'Open Amount';
+    const amountRaw = document.getElementById('link-amount').value;
     const label = document.getElementById('link-label').value;
-    const randomHex = '0x' + Math.random().toString(16).substring(2, 10) + '...' + Math.random().toString(16).substring(2, 6);
-    
     const preview = document.getElementById('preview-panel');
-    preview.innerHTML = `
-      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;">● Ephemeral Facade Active</div>
-      <div style="font-size:20px;font-weight:700;color:#fff;margin-top:4px;">${label}</div>
-      <div style="font-size:15px;color:var(--text-primary);font-weight:600;margin-top:2px;">${amount === 'Open Amount' ? amount : '$' + amount + ' USDC'}</div>
-      
-      <div class="qr-code-frame">
-        <svg width="110" height="110" viewBox="0 0 100 100" fill="#000">
-          <path d="M0 0h30v30H0zM10 10h10v10H10zM70 0h30v30H70zM80 10h10v10H80zM0 70h30v30H0zM10 80h10v10H10zM40 10h10v10H40zM50 40h20v20H50zM80 50h20v20H80z"/>
-        </svg>
-      </div>
+    preview.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Creating session…</div>';
 
-      <div style="font-size:11px;color:var(--text-muted)">Disposable Address:</div>
-      <div class="facade-address-pill">${randomHex}</div>
-      <button class="btn-action-primary" style="margin-top:16px;padding:9px 16px;font-size:12px;" onclick="navigator.clipboard.writeText(window.location.origin + '/checkout.html?session=' + randomHex)">
-        Copy Shareable Checkout Link
-      </button>
-    `;
+    try {
+      const res = await fetch(API_BASE + '/sessions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          merchantId: localStorage.getItem('privy_user_id') || 'anon',
+          amount: amountRaw || null,
+          currency: 'USDC',
+          label: label || 'Untitled',
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'API error');
+      const { session } = data;
+      const checkoutURL = window.location.origin + '/pages/checkout.html?session=' + session.id;
+      const amountLabel = session.amount ? '$' + session.amount + ' USDC' : 'Open Amount';
+
+      preview.innerHTML = `
+        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;">● Ephemeral Facade Active</div>
+        <div style="font-size:20px;font-weight:700;color:#fff;margin-top:4px;">${session.label || 'Checkout'}</div>
+        <div style="font-size:15px;color:var(--text-primary);font-weight:600;margin-top:2px;">${amountLabel}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Facade Address:</div>
+        <div class="facade-address-pill" style="font-family:var(--font-mono);font-size:11px;">${session.facadeAddress.slice(0,8)}…${session.facadeAddress.slice(-6)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Expires in 30 min</div>
+        <button class="btn-action-primary" style="margin-top:16px;padding:9px 16px;font-size:12px;"
+          onclick="navigator.clipboard.writeText('${checkoutURL}').then(()=>this.textContent='Copied!')">
+          Copy Shareable Checkout Link
+        </button>
+      `;
+    } catch(err) {
+      preview.innerHTML = '<div style="color:#f43f5e;font-size:13px;">Failed: ' + err.message + '</div>';
+    }
   }
 </script>
 
 <script>
-// ── API base — update to your deployed Replit URL for production ──────────────
-// e.g. const API_BASE = 'https://api-server.yourname.replit.app/api';
-const API_BASE = window.MIRAGE_API_BASE || '/api';
+const API_BASE = window.MIRAGE_API_BASE || 'https://22b7349e-5ba1-4402-bccf-ef0b926290a2-00-2zbl2p1h7lrxj.janeway.replit.dev/api';
+const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
+
+// ── Auth gate ─────────────────────────────────────────────────────────────────
+(function() {
+  const token = localStorage.getItem('privy_token');
+  if (!token) { window.location.replace('../index.html'); }
+})();
+
+// ── Fetch Privy wallet + user info ────────────────────────────────────────────
+async function loadWallet() {
+  const token = localStorage.getItem('privy_token');
+  if (!token) return;
+  try {
+    const res = await fetch('https://auth.privy.io/api/v1/users/me', {
+      headers: { 'Authorization': 'Bearer ' + token, 'privy-app-id': PRIVY_APP_ID }
+    });
+    const user = await res.json();
+    if (!user || !user.id) return;
+    localStorage.setItem('privy_user_id', user.id);
+    // Find the embedded Privy wallet
+    const wallet = (user.linked_accounts || []).find(
+      a => a.type === 'wallet' && (a.wallet_client_type === 'privy' || a.wallet_client === 'privy')
+    );
+    const addr = wallet ? wallet.address : null;
+    if (addr) {
+      localStorage.setItem('privy_wallet', addr);
+      const short = addr.slice(0, 6) + '…' + addr.slice(-4);
+      // Sidebar pill
+      const pill = document.getElementById('sidebar-wallet');
+      if (pill) { pill.textContent = short; pill.style.display = 'block'; }
+      // Vault section
+      const vaultText = document.getElementById('vault-addr-text');
+      if (vaultText) vaultText.textContent = addr;
+    }
+  } catch(e) { console.warn('Wallet fetch failed:', e); }
+}
+
+function copyWallet() {
+  const addr = localStorage.getItem('privy_wallet');
+  if (!addr) return;
+  navigator.clipboard.writeText(addr).then(() => {
+    const pill = document.getElementById('sidebar-wallet');
+    const orig = pill ? pill.textContent : '';
+    if (pill) { pill.textContent = 'Copied!'; setTimeout(() => pill.textContent = orig, 1500); }
+    const vaultText = document.getElementById('vault-addr-text');
+    if (vaultText) { vaultText.textContent = 'Copied!'; setTimeout(() => vaultText.textContent = addr, 1500); }
+  });
+}
+
+function doLogout() {
+  localStorage.removeItem('privy_token');
+  localStorage.removeItem('privy_user_id');
+  localStorage.removeItem('privy_wallet');
+  localStorage.removeItem('privy_oauth_provider');
+  window.location.replace('../index.html');
+}
+
+loadWallet();
 
 async function loadStats() {
   try {
