@@ -95,20 +95,19 @@ router.post("/sessions/:id/settle", async (req, res): Promise<void> => {
   if (!row.facadeKeypairB58) { res.status(400).json({ error: "session has no ER keypair (stub mode)" }); return; }
 
   try {
-    const sig = await settleFacade(row.facadeKeypairB58, row.facadeAddress);
+    const result = await settleFacade(row.facadeKeypairB58, row.facadeAddress);
     await db.update(sessionsTable).set({ status: "settled" }).where(eq(sessionsTable.id, row.id));
-    // Auto-log to payments table so vault stats stay accurate
     if (row.amount) {
       await db.insert(paymentsTable).values({
         amount: row.amount,
         currency: row.currency ?? "USDC",
         facadeAddress: row.facadeAddress,
         sessionId: row.id,
-        txHash: sig,
+        txHash: result.sig,
         merchantId: row.merchantId ?? null,
       }).onConflictDoNothing();
     }
-    res.json({ sig, status: "settled" });
+    res.json({ sig: result.sig, private: result.private, status: "settled" });
   } catch (e) {
     res.status(502).json({ error: "settlement failed", detail: String(e) });
   }

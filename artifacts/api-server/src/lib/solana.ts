@@ -13,16 +13,57 @@ import {
   getAccount,
 } from "@solana/spl-token";
 import bs58 from "bs58";
+import nacl from "tweetnacl";
 
 export const PROGRAM_ID = new PublicKey(
   process.env.PROGRAM_ID ?? "D6au34Ft153B5ghrujVzTg4nGJFiitpePnoQ666JPzB7"
 );
 
+const MB_API = "https://payments.magicblock.app";
+const CLUSTER = "devnet";
+
+// ── Token cache keyed by pubkey ───────────────────────────────────────────────
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
+
+async function getMbToken(keypair: Keypair): Promise<string> {
+  const pubkey = keypair.publicKey.toBase58();
+  const cached = tokenCache.get(pubkey);
+  if (cached && Date.now() < cached.expiresAt) return cached.token;
+
+  // 1. Get challenge
+  const challengeRes = await fetch(
+    `${MB_API}/v1/spl/challenge?pubkey=${pubkey}&cluster=${CLUSTER}`
+  );
+  if (!challengeRes.ok) throw new Error(`MB challenge failed: ${challengeRes.status}`);
+  const { challenge } = await challengeRes.json() as { challenge: string };
+
+  // 2. Sign challenge with keypair
+  const msgBytes = Buffer.from(challenge, "utf8");
+  const sigBytes = nacl.sign.detached(msgBytes, keypair.secretKey);
+  const signature = bs58.encode(sigBytes);
+
+  // 3. Login → get token
+  const loginRes = await fetch(`${MB_API}/v1/spl/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pubkey, challenge, signature, cluster: CLUSTER }),
+  });
+  if (!loginRes.ok) {
+    const err = await loginRes.text();
+    throw new Error(`MB login failed: ${loginRes.status} ${err}`);
+  }
+  const { token } = await loginRes.json() as { token: string };
+
+  // Cache for 50 minutes (tokens typically last ~1h)
+  tokenCache.set(pubkey, { token, expiresAt: Date.now() + 50 * 60 * 1000 });
+  return token;
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
 export function isErConfigured(): boolean {
   return !!(process.env.SERVER_KEYPAIR && process.env.USDC_MINT);
 }
 
-// Withdrawals always work — server IS the vault owner
 export function isWithdrawConfigured(): boolean {
   return isErConfigured();
 }
@@ -30,7 +71,6 @@ export function isWithdrawConfigured(): boolean {
 function cfg() {
   const server = Keypair.fromSecretKey(bs58.decode(process.env.SERVER_KEYPAIR!));
   const usdcMint = new PublicKey(process.env.USDC_MINT!);
-  // Vault = server's own USDC ATA. No separate MERCHANT_USDC_ATA needed.
   const merchantAta = process.env.MERCHANT_USDC_ATA
     ? new PublicKey(process.env.MERCHANT_USDC_ATA)
     : getAssociatedTokenAddressSync(usdcMint, server.publicKey);
@@ -45,7 +85,7 @@ function cfg() {
   };
 }
 
-/** Live on-chain USDC balance of the merchant vault ATA. */
+// ── Vault ─────────────────────────────────────────────────────────────────────
 export async function getVaultBalance(): Promise<bigint> {
   const { merchantAta, base } = cfg();
   try {
@@ -56,10 +96,12 @@ export async function getVaultBalance(): Promise<bigint> {
   }
 }
 
-/**
- * Creates a one-time facade keypair and its USDC ATA on base layer.
- * Returns the facade's SOL public key (what buyer pastes into any wallet).
- */
+export function getVaultAddress(): { wallet: string; ata: string } {
+  const { server, merchantAta } = cfg();
+  return { wallet: server.publicKey.toBase58(), ata: merchantAta.toBase58() };
+}
+
+// ── Facade ────────────────────────────────────────────────────────────────────
 export async function createFacade(): Promise<{
   facadeAddress: string;
   keypairB58: string;
@@ -84,14 +126,10 @@ export async function createFacade(): Promise<{
   };
 }
 
-/** USDC balance of facade's ATA on base layer. Returns 0n if not yet funded. */
 export async function getFacadeBalance(facadeAddress: string): Promise<bigint> {
   const { usdcMint, base } = cfg();
   try {
-    const facadeAta = getAssociatedTokenAddressSync(
-      usdcMint,
-      new PublicKey(facadeAddress)
-    );
+    const facadeAta = getAssociatedTokenAddressSync(usdcMint, new PublicKey(facadeAddress));
     const acct = await getAccount(base, facadeAta);
     return acct.amount;
   } catch {
@@ -100,15 +138,14 @@ export async function getFacadeBalance(facadeAddress: string): Promise<bigint> {
 }
 
 /**
- * Sweeps facade ATA → merchant vault ATA via a direct SPL transfer,
- * then closes the facade ATA to recover rent back to the server.
- * The one-time facade address is the privacy layer — the merchant vault
- * address is never shown to the buyer at any point in the checkout flow.
+ * Settles facade → merchant vault privately via MagicBlock's Payments API.
+ * Falls back to a plain on-chain SPL transfer if the MB API is unavailable.
+ * Returns { sig, private: true/false } so callers know which path was used.
  */
 export async function settleFacade(
   keypairB58: string,
-  facadeAddress: string
-): Promise<string> {
+  _facadeAddress: string
+): Promise<{ sig: string; private: boolean }> {
   const { usdcMint, merchantAta, base, server } = cfg();
   const facade = Keypair.fromSecretKey(bs58.decode(keypairB58));
   const facadeAtaPk = getAssociatedTokenAddressSync(usdcMint, facade.publicKey);
@@ -117,35 +154,62 @@ export async function settleFacade(
   const amount = acct.amount;
   if (amount === 0n) throw new Error("facade ATA has zero balance");
 
+  // ── Try MagicBlock private settlement first ──
+  try {
+    const token = await getMbToken(facade);
+
+    const res = await fetch(`${MB_API}/v1/spl/transfer`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        from: facade.publicKey.toBase58(),
+        to: server.publicKey.toBase58(),   // server wallet; API derives ATA
+        mint: usdcMint.toBase58(),
+        amount: Number(amount),
+        visibility: "private",
+        fromBalance: "base",
+        toBalance: "base",
+        gasless: true,
+        initAtasIfMissing: true,
+        cluster: CLUSTER,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json() as { signature?: string; sig?: string; txId?: string };
+      const sig = data.signature ?? data.sig ?? data.txId ?? "mb-private";
+      console.log("[settle] MagicBlock private transfer:", sig);
+      return { sig, private: true };
+    }
+
+    const errText = await res.text();
+    console.warn("[settle] MB API failed, falling back:", res.status, errText);
+  } catch (mbErr) {
+    console.warn("[settle] MB API error, falling back:", mbErr);
+  }
+
+  // ── Fallback: plain on-chain SPL transfer ──
   const tx = new Transaction().add(
-    // Ensure merchant vault ATA exists (idempotent — safe if already created)
-    createAssociatedTokenAccountIdempotentInstruction(server.publicKey, merchantAta, server.publicKey, usdcMint),
-    // Transfer full balance facade → merchant vault
+    createAssociatedTokenAccountIdempotentInstruction(
+      server.publicKey, merchantAta, server.publicKey, usdcMint
+    ),
     createTransferInstruction(facadeAtaPk, merchantAta, facade.publicKey, amount),
-    // Close facade ATA and return rent to server
     createCloseAccountInstruction(facadeAtaPk, server.publicKey, facade.publicKey)
   );
-
   const sig = await sendAndConfirmTransaction(base, tx, [server, facade]);
-  return sig;
+  console.log("[settle] fallback plain SPL transfer:", sig);
+  return { sig, private: false };
 }
 
-/** Returns the server's wallet address and its USDC ATA (the vault). */
-export function getVaultAddress(): { wallet: string; ata: string } {
-  const { server, merchantAta } = cfg();
-  return { wallet: server.publicKey.toBase58(), ata: merchantAta.toBase58() };
-}
-
-/**
- * Withdraws USDC from the merchant vault to a destination wallet.
- * Server keypair IS the vault owner — no extra env var needed.
- */
+// ── Withdraw ──────────────────────────────────────────────────────────────────
 export async function withdrawFromVault(
   destination: string,
   amount: bigint
 ): Promise<string> {
   const { usdcMint, merchantAta, base, server } = cfg();
-  const vault = server; // server wallet owns the vault ATA
 
   const acct = await getAccount(base, merchantAta);
   const available = acct.amount;
@@ -153,13 +217,13 @@ export async function withdrawFromVault(
   const sendAmount = amount === 0n ? available : amount;
   if (sendAmount > available) throw new Error(`only ${Number(available) / 1e6} USDC available`);
 
-  // Derive destination ATA from wallet address; if it's already an ATA that's fine too
   const destPk = new PublicKey(destination);
   const destAta = getAssociatedTokenAddressSync(usdcMint, destPk);
 
   const tx = new Transaction().add(
-    createTransferInstruction(merchantAta, destAta, vault.publicKey, sendAmount)
+    createAssociatedTokenAccountIdempotentInstruction(server.publicKey, destAta, destPk, usdcMint),
+    createTransferInstruction(merchantAta, destAta, server.publicKey, sendAmount)
   );
-  const sig = await sendAndConfirmTransaction(base, tx, [server, vault]);
+  const sig = await sendAndConfirmTransaction(base, tx, [server]);
   return sig;
 }
