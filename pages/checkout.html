@@ -295,7 +295,7 @@
 <div class="portal-card">
   <div class="portal-header">
     <div class="merchant-title" id="merchantName">Acme Corp</div>
-    <div class="amount-display">120.00 <span>USDC</span></div>
+    <div class="amount-display" id="amountDisplay">— <span>USDC</span></div>
     <div class="order-ref" id="orderRef">Order Ref: #INV-89201</div>
   </div>
 
@@ -319,7 +319,7 @@
     </div>
 
     <div class="instruction-note">
-      Open your wallet. Send <strong>exactly 120.00 USDC</strong> to this address. No app connection required.
+      Open your wallet. Send <strong id="instrAmount">the exact amount</strong> to this address. No app connection required.
     </div>
   </div>
 
@@ -393,7 +393,10 @@
         // Update amount display from session
         if (data.amount) {
           const amtEl = document.querySelector('.amount-display');
-          if (amtEl) amtEl.innerHTML = parseFloat(data.amount).toFixed(2) + ' <span>USDC</span>';
+          const amt = parseFloat(data.amount).toFixed(2);
+          if (amtEl) amtEl.innerHTML = amt + ' <span>USDC</span>';
+          const instrEl = document.getElementById('instrAmount');
+          if (instrEl) instrEl.textContent = 'exactly ' + amt + ' USDC';
         }
         // Set timer from session expiry
         if (data.expiryMinutes) countdownSeconds = data.expiryMinutes * 60;
