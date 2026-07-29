@@ -2,7 +2,7 @@ import { Router } from "express";
 import { desc, eq, sum } from "drizzle-orm";
 import { db, paymentsTable } from "@workspace/db";
 import { LogPaymentBody } from "@workspace/api-zod";
-import { isErConfigured, getVaultBalance } from "../lib/solana.js";
+import { isErConfigured, isWithdrawConfigured, getVaultBalance, withdrawFromVault } from "../lib/solana.js";
 
 const router = Router();
 
@@ -10,6 +10,22 @@ router.get("/vault/balance", async (_req, res): Promise<void> => {
   if (!isErConfigured()) { res.json({ balance: null, configured: false }); return; }
   const raw = await getVaultBalance();
   res.json({ balance: (Number(raw) / 1e6).toFixed(6), configured: true });
+});
+
+router.post("/vault/withdraw", async (req, res): Promise<void> => {
+  if (!isWithdrawConfigured()) {
+    res.status(400).json({ error: "VAULT_KEYPAIR not set — add it to Railway env vars to enable withdrawals" });
+    return;
+  }
+  // Accept either a wallet address or a token account; server derives ATA if needed
+  const { destination, amount } = req.body as { destination: string; amount?: number };
+  if (!destination) { res.status(400).json({ error: "destination required" }); return; }
+  try {
+    const sig = await withdrawFromVault(destination, BigInt(Math.round((amount ?? 0) * 1e6)));
+    res.json({ sig, status: "withdrawn" });
+  } catch (e) {
+    res.status(502).json({ error: "withdrawal failed", detail: String(e) });
+  }
 });
 
 router.get("/payments/stats", async (req, res): Promise<void> => {

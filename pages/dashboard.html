@@ -904,9 +904,10 @@
           </div>
         </div>
 
-        <button class="btn-action-primary" style="max-width:200px;margin:20px auto 0;">
+        <button class="btn-action-primary" style="max-width:200px;margin:20px auto 0;" onclick="withdrawFunds()">
           Withdraw Funds
         </button>
+        <div id="withdraw-status" style="font-size:12px;margin-top:10px;min-height:18px;text-align:center;"></div>
       </div>
     </div>
 
@@ -1093,6 +1094,31 @@ function doLogout() {
 }
 
 loadWallet();
+
+async function withdrawFunds() {
+  const statusEl = document.getElementById('withdraw-status');
+  const addr = localStorage.getItem('privy_wallet');
+  if (!addr) { if(statusEl) statusEl.textContent = 'No wallet loaded — connect first'; return; }
+
+  // Derive USDC ATA from the destination wallet address
+  if(statusEl) statusEl.textContent = 'Requesting withdrawal…';
+  try {
+    const res = await fetch(API_BASE + '/api/vault/withdraw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destination: addr, amount: 0 }), // amount 0 = sweep all
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if(statusEl) statusEl.innerHTML = '<span style="color:#f87171">' + (data.error || 'Failed') + '</span>';
+    } else {
+      if(statusEl) statusEl.innerHTML = '<span style="color:#34d399">Withdrawn ✓ ' + data.sig.slice(0,8) + '…</span>';
+      loadVaultBalance();
+    }
+  } catch(e) {
+    if(statusEl) statusEl.innerHTML = '<span style="color:#f87171">Network error</span>';
+  }
+}
 
 async function loadVaultBalance() {
   try {
