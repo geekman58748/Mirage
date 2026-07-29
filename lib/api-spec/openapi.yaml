@@ -1,0 +1,306 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Mirage private merchant gateway API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: payments
+  - name: sessions
+  - name: apikeys
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: Full payment ledger
+      parameters:
+        - in: query
+          name: merchantId
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentRecord"
+    post:
+      operationId: logPayment
+      tags: [payments]
+      summary: Log a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRecord"
+
+  /payments/stats:
+    get:
+      operationId: getPaymentStats
+      tags: [payments]
+      summary: Totals and recent payments
+      parameters:
+        - in: query
+          name: merchantId
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentStats"
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List sessions for a merchant
+      parameters:
+        - in: query
+          name: merchantId
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionRecord"
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Create an ephemeral checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionRecord"
+
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Get session by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionRecord"
+        "404":
+          description: Not found
+    delete:
+      operationId: expireSession
+      tags: [sessions]
+      summary: Expire/close a session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionRecord"
+
+  /api-keys:
+    get:
+      operationId: listApiKeys
+      tags: [apikeys]
+      summary: List API keys for merchant
+      parameters:
+        - in: query
+          name: merchantId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiKeyRecord"
+    post:
+      operationId: createApiKey
+      tags: [apikeys]
+      summary: Create a new API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyInput"
+      responses:
+        "201":
+          description: Created — returns the raw key only once
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyCreated"
+
+  /api-keys/{id}:
+    delete:
+      operationId: revokeApiKey
+      tags: [apikeys]
+      summary: Revoke an API key
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: number }
+      responses:
+        "200":
+          description: Revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyRecord"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+
+    PaymentRecord:
+      type: object
+      required: [id, amount, currency, facadeAddress, createdAt]
+      properties:
+        id: { type: number }
+        amount: { type: number }
+        currency: { type: string }
+        facadeAddress: { type: string }
+        sessionId: { type: ["string", "null"] }
+        txHash: { type: ["string", "null"] }
+        merchantId: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    PaymentInput:
+      type: object
+      required: [amount, currency, facadeAddress]
+      properties:
+        amount: { type: number }
+        currency: { type: string }
+        facadeAddress: { type: string }
+        sessionId: { type: string }
+        txHash: { type: string }
+        merchantId: { type: string }
+
+    PaymentStats:
+      type: object
+      required: [totalUSDC, totalPayments, recent]
+      properties:
+        totalUSDC: { type: number }
+        totalPayments: { type: number }
+        recent:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentRecord"
+
+    SessionRecord:
+      type: object
+      required: [id, facadeAddress, label, expiryMinutes, currency, status, createdAt, expiresAt]
+      properties:
+        id: { type: string }
+        facadeAddress: { type: string }
+        label: { type: string }
+        expiryMinutes: { type: number }
+        amount: { type: ["number", "null"] }
+        currency: { type: string }
+        merchantId: { type: ["string", "null"] }
+        status: { type: string }
+        createdAt: { type: string }
+        expiresAt: { type: string }
+        checkoutUrl: { type: string }
+
+    SessionInput:
+      type: object
+      required: [label, expiryMinutes]
+      properties:
+        label: { type: string }
+        expiryMinutes: { type: number }
+        amount: { type: number }
+        currency: { type: string }
+        merchantId: { type: string }
+
+    ApiKeyRecord:
+      type: object
+      required: [id, merchantId, keyPrefix, label, createdAt]
+      properties:
+        id: { type: number }
+        merchantId: { type: string }
+        keyPrefix: { type: string }
+        label: { type: string }
+        createdAt: { type: string }
+        lastUsedAt: { type: ["string", "null"] }
+
+    ApiKeyInput:
+      type: object
+      required: [merchantId, label]
+      properties:
+        merchantId: { type: string }
+        label: { type: string }
+
+    ApiKeyCreated:
+      type: object
+      required: [id, merchantId, keyPrefix, label, createdAt, rawKey]
+      properties:
+        id: { type: number }
+        merchantId: { type: string }
+        keyPrefix: { type: string }
+        label: { type: string }
+        createdAt: { type: string }
+        lastUsedAt: { type: ["string", "null"] }
+        rawKey: { type: string }
