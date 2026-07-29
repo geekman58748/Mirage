@@ -1154,6 +1154,12 @@ window.closeSignIn = function() {
       setBusy('privy-verify-btn', false);
       if (d.token || d.user) {
         if (d.token) localStorage.setItem('privy_token', d.token);
+        var u = d.user || {};
+        if (u.id) localStorage.setItem('privy_user_id', u.id);
+        var accts = u.linked_accounts || [];
+        var w = accts.find(function(a){ return a.type === 'wallet' && (a.wallet_client === 'privy' || a.wallet_client_type === 'privy'); });
+        if (!w) w = accts.find(function(a){ return a.type === 'wallet'; });
+        if (w && w.address) localStorage.setItem('privy_wallet', w.address);
         window.location.href = DASHBOARD;
       } else {
         showError(d.message || d.error || 'Invalid code — try again.');

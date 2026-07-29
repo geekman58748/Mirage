@@ -1026,32 +1026,22 @@ const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 })();
 
 // ── Fetch Privy wallet + user info ────────────────────────────────────────────
-async function loadWallet() {
-  const token = localStorage.getItem('privy_token');
-  if (!token) return;
-  try {
-    const res = await fetch('https://auth.privy.io/api/v1/users/me', {
-      headers: { 'Authorization': 'Bearer ' + token, 'privy-app-id': PRIVY_APP_ID }
-    });
-    const user = await res.json();
-    if (!user || !user.id) return;
-    localStorage.setItem('privy_user_id', user.id);
-    // Find the embedded Privy wallet
-    const wallet = (user.linked_accounts || []).find(
-      a => a.type === 'wallet' && (a.wallet_client_type === 'privy' || a.wallet_client === 'privy')
-    );
-    const addr = wallet ? wallet.address : null;
-    if (addr) {
-      localStorage.setItem('privy_wallet', addr);
-      const short = addr.slice(0, 6) + '…' + addr.slice(-4);
-      // Sidebar pill
-      const pill = document.getElementById('sidebar-wallet');
-      if (pill) { pill.textContent = short; pill.style.display = 'block'; }
-      // Vault section
-      const vaultText = document.getElementById('vault-addr-text');
-      if (vaultText) vaultText.textContent = addr;
-    }
-  } catch(e) { console.warn('Wallet fetch failed:', e); }
+function loadWallet() {
+  // Wallet address is stored at login time from the Privy auth response.
+  // No extra API call needed — /users/me requires server-side auth with the app secret.
+  const addr = localStorage.getItem('privy_wallet');
+  if (!addr) {
+    // No wallet yet — Privy may not have created one if the app isn't configured
+    // with embedded wallets. Show a placeholder.
+    const vaultText = document.getElementById('vault-addr-text');
+    if (vaultText) vaultText.textContent = 'No embedded wallet found — enable in Privy dashboard';
+    return;
+  }
+  const short = addr.slice(0, 6) + '…' + addr.slice(-4);
+  const pill = document.getElementById('sidebar-wallet');
+  if (pill) { pill.textContent = short; pill.style.display = 'block'; }
+  const vaultText = document.getElementById('vault-addr-text');
+  if (vaultText) vaultText.textContent = addr;
 }
 
 function copyWallet() {

@@ -48,6 +48,12 @@
     if (d.token || d.user) {
       if (d.token) localStorage.setItem('privy_token', d.token);
       localStorage.removeItem('privy_oauth_provider');
+      var u = d.user || {};
+      if (u.id) localStorage.setItem('privy_user_id', u.id);
+      var accts = u.linked_accounts || [];
+      var w = accts.find(function(a){ return a.type === 'wallet' && (a.wallet_client === 'privy' || a.wallet_client_type === 'privy'); });
+      if (!w) w = accts.find(function(a){ return a.type === 'wallet'; });
+      if (w && w.address) localStorage.setItem('privy_wallet', w.address);
       window.location.replace('dashboard.html');
     } else {
       document.getElementById('spinner').style.display = 'none';
