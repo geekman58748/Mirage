@@ -1025,23 +1025,67 @@ const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
   if (!token) { window.location.replace('../index.html'); }
 })();
 
-// ── Fetch Privy wallet + user info ────────────────────────────────────────────
-function loadWallet() {
-  // Wallet address is stored at login time from the Privy auth response.
-  // No extra API call needed — /users/me requires server-side auth with the app secret.
-  const addr = localStorage.getItem('privy_wallet');
-  if (!addr) {
-    // No wallet yet — Privy may not have created one if the app isn't configured
-    // with embedded wallets. Show a placeholder.
-    const vaultText = document.getElementById('vault-addr-text');
-    if (vaultText) vaultText.textContent = 'No embedded wallet found — enable in Privy dashboard';
-    return;
-  }
+// ── Wallet: load from storage, or create on-demand via Privy ─────────────────
+function showWalletAddr(addr) {
   const short = addr.slice(0, 6) + '…' + addr.slice(-4);
   const pill = document.getElementById('sidebar-wallet');
   if (pill) { pill.textContent = short; pill.style.display = 'block'; }
   const vaultText = document.getElementById('vault-addr-text');
   if (vaultText) vaultText.textContent = addr;
+}
+
+async function loadWallet() {
+  // 1. Already have it cached — show immediately
+  const cached = localStorage.getItem('privy_wallet');
+  if (cached) { showWalletAddr(cached); return; }
+
+  const token = localStorage.getItem('privy_token');
+  if (!token) return;
+
+  const vaultText = document.getElementById('vault-addr-text');
+
+  // 2. Try creating a Solana embedded wallet on-demand
+  try {
+    if (vaultText) vaultText.textContent = 'Creating wallet…';
+    const res = await fetch('https://auth.privy.io/api/v1/wallets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'privy-app-id': PRIVY_APP_ID,
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify({ chain_type: 'solana' }),
+    });
+    const data = await res.json();
+
+    // Privy returns { address } on creation, or { error } if already exists
+    if (data.address) {
+      localStorage.setItem('privy_wallet', data.address);
+      showWalletAddr(data.address);
+      return;
+    }
+
+    // 3. Wallet already exists — fetch it from the wallets list
+    const listRes = await fetch('https://auth.privy.io/api/v1/wallets', {
+      headers: {
+        'privy-app-id': PRIVY_APP_ID,
+        'Authorization': 'Bearer ' + token,
+      },
+    });
+    const listData = await listRes.json();
+    const wallets = listData.wallets || listData.data || [];
+    const w = wallets.find(w => w.chain_type === 'solana') || wallets[0];
+    if (w && w.address) {
+      localStorage.setItem('privy_wallet', w.address);
+      showWalletAddr(w.address);
+      return;
+    }
+
+    if (vaultText) vaultText.textContent = 'Enable Embedded Wallets in Privy dashboard first';
+  } catch(e) {
+    console.error('Wallet load error:', e);
+    if (vaultText) vaultText.textContent = 'Could not load wallet — check console';
+  }
 }
 
 function copyWallet() {
