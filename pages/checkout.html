@@ -517,7 +517,7 @@
       try {
         const r = await fetch(API_BASE + '/api/sessions/' + SESSION_ID + '/balance');
         const d = await r.json();
-        if (d.er && d.balance && BigInt(d.balance) >= BigInt(Math.round((PAYMENT_AMOUNT || 0) * 1e6))) {
+        if (d.er && d.balance && BigInt(d.balance) > 0n && PAYMENT_AMOUNT > 0 && BigInt(d.balance) >= BigInt(Math.round(PAYMENT_AMOUNT * 1e6))) {
           clearInterval(_pollInterval);
           await fetch(API_BASE + '/api/sessions/' + SESSION_ID + '/settle', { method: 'POST' });
           transitionToState(2);
