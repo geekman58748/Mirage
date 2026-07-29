@@ -154,8 +154,12 @@ export async function settleFacade(
   const amount = acct.amount;
   if (amount === 0n) throw new Error("facade ATA has zero balance");
 
-  // ── Try MagicBlock private settlement first ──
-  try {
+  // ── Try MagicBlock private settlement first (requires ≥ 0.5 USDC for gasless) ──
+  const MB_MIN = 500_000n; // 0.5 USDC in lamports
+  if (amount < MB_MIN) {
+    console.log(`[settle] amount ${amount} < MB minimum, skipping MB → plain SPL`);
+  }
+  if (amount >= MB_MIN) try {
     const token = await getMbToken(facade);
 
     const payload = {
@@ -166,6 +170,7 @@ export async function settleFacade(
       visibility: "private",
       fromBalance: "base",
       toBalance: "base",
+      gasless: true,
       initAtasIfMissing: true,
       cluster: CLUSTER,
     };
