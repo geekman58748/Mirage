@@ -390,10 +390,11 @@
           const qrEl = document.getElementById('qrcode');
           if (qrEl) { qrEl.innerHTML = ''; new QRCode(qrEl, { text: FACADE_ADDRESS, width: 160, height: 160, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M }); }
         }
-        // Update amount display from session
+        // Update amount display and PAYMENT_AMOUNT from session
         if (data.amount) {
+          PAYMENT_AMOUNT = parseFloat(data.amount);
           const amtEl = document.querySelector('.amount-display');
-          const amt = parseFloat(data.amount).toFixed(2);
+          const amt = PAYMENT_AMOUNT.toFixed(2);
           if (amtEl) amtEl.innerHTML = amt + ' <span>USDC</span>';
           const instrEl = document.getElementById('instrAmount');
           if (instrEl) instrEl.textContent = 'exactly ' + amt + ' USDC';
@@ -517,7 +518,9 @@
       try {
         const r = await fetch(API_BASE + '/api/sessions/' + SESSION_ID + '/balance');
         const d = await r.json();
-        if (d.er && d.balance && BigInt(d.balance) > 0n && PAYMENT_AMOUNT > 0 && BigInt(d.balance) >= BigInt(Math.round(PAYMENT_AMOUNT * 1e6))) {
+        const received = d.er && d.balance ? BigInt(d.balance) : 0n;
+        const required = PAYMENT_AMOUNT > 0 ? BigInt(Math.round(PAYMENT_AMOUNT * 1e6)) : 1n;
+        if (received >= required && received > 0n) {
           clearInterval(_pollInterval);
           await fetch(API_BASE + '/api/sessions/' + SESSION_ID + '/settle', { method: 'POST' });
           transitionToState(2);
