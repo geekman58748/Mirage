@@ -6,7 +6,7 @@ import {
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import {
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createCloseAccountInstruction,
   createTransferInstruction,
   getAssociatedTokenAddressSync,
@@ -69,7 +69,7 @@ export async function createFacade(): Promise<{
   const facadeAta = getAssociatedTokenAddressSync(usdcMint, facade.publicKey);
 
   const tx = new Transaction().add(
-    createAssociatedTokenAccountInstruction(
+    createAssociatedTokenAccountIdempotentInstruction(
       server.publicKey,
       facadeAta,
       facade.publicKey,
@@ -118,6 +118,8 @@ export async function settleFacade(
   if (amount === 0n) throw new Error("facade ATA has zero balance");
 
   const tx = new Transaction().add(
+    // Ensure merchant vault ATA exists (idempotent — safe if already created)
+    createAssociatedTokenAccountIdempotentInstruction(server.publicKey, merchantAta, server.publicKey, usdcMint),
     // Transfer full balance facade → merchant vault
     createTransferInstruction(facadeAtaPk, merchantAta, facade.publicKey, amount),
     // Close facade ATA and return rent to server
