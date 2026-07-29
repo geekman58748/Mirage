@@ -897,11 +897,16 @@
         </div>
 
         <div style="margin-top:12px;">
-          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">Master Vault Address (Privy Embedded Wallet):</span>
-          <div class="vault-address-container" id="vault-addr-box" style="cursor:pointer;" title="Click to copy" onclick="copyWallet()">
-            <span id="vault-addr-text">Loading wallet…</span>
+          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">Vault USDC Address (click to copy):</span>
+          <div class="vault-address-container" id="vault-addr-box" style="cursor:pointer;" title="Click to copy vault address" onclick="copyVaultAta()">
+            <span id="vault-addr-text">Loading…</span>
             <span id="vault-copy-icon" style="margin-left:8px;font-size:11px;color:var(--text-muted)">⎘</span>
           </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <span style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:4px;">Withdraw to (your login wallet):</span>
+          <span id="withdraw-dest-text" style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted)">—</span>
         </div>
 
         <button class="btn-action-primary" style="max-width:200px;margin:20px auto 0;" onclick="withdrawFunds()">
@@ -1012,11 +1017,13 @@ const PRIVY_APP_ID = 'cms56lvu500030ckz9hxe7lex';
 
 // ── Wallet: load from storage, or create on-demand via Privy ─────────────────
 function showWalletAddr(addr) {
+  // Only update sidebar pill — vault-addr-text is set by loadVaultBalance from the API
   const short = addr.slice(0, 6) + '…' + addr.slice(-4);
   const pill = document.getElementById('sidebar-wallet');
   if (pill) { pill.textContent = short; pill.style.display = 'block'; }
-  const vaultText = document.getElementById('vault-addr-text');
-  if (vaultText) vaultText.textContent = addr;
+  // Show as withdrawal destination
+  const destEl = document.getElementById('withdraw-dest-text');
+  if (destEl) destEl.textContent = addr.slice(0,6) + '…' + addr.slice(-4) + ' (full: ' + addr + ')';
 }
 
 async function loadWallet() {
@@ -1073,6 +1080,15 @@ async function loadWallet() {
   }
 }
 
+function copyVaultAta() {
+  const ata = window._vaultAta;
+  if (!ata) return;
+  navigator.clipboard.writeText(ata).then(() => {
+    const el = document.getElementById('vault-addr-text');
+    if (el) { el.textContent = 'Copied!'; setTimeout(() => el.textContent = ata, 1500); }
+  });
+}
+
 function copyWallet() {
   const addr = localStorage.getItem('privy_wallet');
   if (!addr) return;
@@ -1080,8 +1096,6 @@ function copyWallet() {
     const pill = document.getElementById('sidebar-wallet');
     const orig = pill ? pill.textContent : '';
     if (pill) { pill.textContent = 'Copied!'; setTimeout(() => pill.textContent = orig, 1500); }
-    const vaultText = document.getElementById('vault-addr-text');
-    if (vaultText) { vaultText.textContent = 'Copied!'; setTimeout(() => vaultText.textContent = addr, 1500); }
   });
 }
 

@@ -87,3 +87,4 @@ function serialize(p: typeof paymentsTable.$inferSelect) {
 }
 
 export default router;
+// Wed Jul 29 07:58:46 PM UTC 2026
