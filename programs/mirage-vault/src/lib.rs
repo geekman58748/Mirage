@@ -1,15 +1,12 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, CloseAccount, Token, TokenAccount, Transfer};
-use ephemeral_rollups_sdk::anchor::ephemeral;
 
 declare_id!("11111111111111111111111111111111");
 
-#[ephemeral]
 #[program]
 pub mod mirage_vault {
     use super::*;
 
-    /// Transfer USDC from facade ATA → merchant ATA, then close facade ATA (recover rent).
     pub fn settle(ctx: Context<Settle>, amount: u64) -> Result<()> {
         require!(amount > 0, MirageError::ZeroAmount);
         token::transfer(
