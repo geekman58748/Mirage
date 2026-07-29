@@ -184,8 +184,34 @@ export async function settleFacade(
     console.log("[settle] MB response status:", res.status, "body:", rawBody);
 
     if (res.ok) {
-      let data: { signature?: string; sig?: string; txId?: string } = {};
+      let data: {
+        signature?: string; sig?: string; txId?: string;
+        transactionBase64?: string;
+        requiredSigners?: string[];
+        sendTo?: string;
+      } = {};
       try { data = JSON.parse(rawBody); } catch {}
+
+      // MB returns an unsigned tx that we must sign + submit
+      if (data.transactionBase64) {
+        const { Transaction: SolTx, VersionedTransaction } = await import("@solana/web3.js");
+        const txBytes = Buffer.from(data.transactionBase64, "base64");
+        let sig: string;
+        try {
+          // Try as versioned first, fall back to legacy
+          const vtx = VersionedTransaction.deserialize(txBytes);
+          vtx.sign([facade]);
+          sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: false });
+        } catch {
+          const ltx = SolTx.from(txBytes);
+          ltx.partialSign(facade);
+          sig = await base.sendRawTransaction(ltx.serialize(), { skipPreflight: false });
+        }
+        await base.confirmTransaction(sig, "confirmed");
+        console.log("[settle] MB private tx signed + confirmed:", sig);
+        return { sig, private: true };
+      }
+
       const sig = data.signature ?? data.sig ?? data.txId ?? "mb-private";
       console.log("[settle] MagicBlock private transfer sig:", sig);
       return { sig, private: true };
