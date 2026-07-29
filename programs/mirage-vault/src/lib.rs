@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, CloseAccount, Token, TokenAccount, Transfer};
 
-declare_id!("11111111111111111111111111111111");
+declare_id!("D6au34Ft153B5ghrujVzTg4nGJFiitpePnoQ666JPzB7");
 
 #[program]
 pub mod mirage_vault {

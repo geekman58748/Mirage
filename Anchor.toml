@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-mirage-vault = "11111111111111111111111111111111"
+mirage-vault = "D6au34Ft153B5ghrujVzTg4nGJFiitpePnoQ666JPzB7"
 
 [programs.mainnet]
-mirage-vault = "11111111111111111111111111111111"
+mirage-vault = "D6au34Ft153B5ghrujVzTg4nGJFiitpePnoQ666JPzB7"
 
 [registry]
 url = "https://api.apr.dev"

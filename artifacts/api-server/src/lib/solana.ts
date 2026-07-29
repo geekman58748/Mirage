@@ -18,6 +18,10 @@ import {
 } from "@magicblock-labs/ephemeral-rollups-sdk";
 import bs58 from "bs58";
 
+export const PROGRAM_ID = new PublicKey(
+  process.env.PROGRAM_ID ?? "D6au34Ft153B5ghrujVzTg4nGJFiitpePnoQ666JPzB7"
+);
+
 export function isErConfigured(): boolean {
   return !!(
     process.env.SERVER_KEYPAIR &&
