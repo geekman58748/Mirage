@@ -2,8 +2,15 @@ import { Router } from "express";
 import { desc, eq, sum } from "drizzle-orm";
 import { db, paymentsTable } from "@workspace/db";
 import { LogPaymentBody } from "@workspace/api-zod";
+import { isErConfigured, getVaultBalance } from "../lib/solana.js";
 
 const router = Router();
+
+router.get("/vault/balance", async (_req, res): Promise<void> => {
+  if (!isErConfigured()) { res.json({ balance: null, configured: false }); return; }
+  const raw = await getVaultBalance();
+  res.json({ balance: (Number(raw) / 1e6).toFixed(6), configured: true });
+});
 
 router.get("/payments/stats", async (req, res): Promise<void> => {
   const merchantId = req.query.merchantId as string | undefined;

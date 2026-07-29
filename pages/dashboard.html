@@ -1094,6 +1094,15 @@ function doLogout() {
 
 loadWallet();
 
+async function loadVaultBalance() {
+  try {
+    const res = await fetch(API_BASE + '/api/vault/balance');
+    const { balance, configured } = await res.json();
+    const el = document.getElementById('vault-balance');
+    if (el) el.textContent = configured && balance != null ? parseFloat(balance).toFixed(2) : '—';
+  } catch(e) { console.warn('Vault balance fetch failed:', e); }
+}
+
 async function loadStats() {
   try {
     const [statsRes, allRes] = await Promise.all([
@@ -1168,7 +1177,9 @@ function timeAgo(date) {
 
 // Load on page show + poll every 30s
 loadStats();
+loadVaultBalance();
 setInterval(loadStats, 30000);
+setInterval(loadVaultBalance, 30000);
 
 // ── API Keys ─────────────────────────────────────────────────────────────────
 async function loadApiKeys() {

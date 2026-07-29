@@ -15,6 +15,19 @@ import {
 } from "@magicblock-labs/ephemeral-rollups-sdk";
 import bs58 from "bs58";
 
+/**
+ * Returns the live on-chain USDC balance of the merchant vault ATA (base layer).
+ */
+export async function getVaultBalance(): Promise<bigint> {
+  const { merchantAta, base } = cfg();
+  try {
+    const acct = await getAccount(base, merchantAta);
+    return acct.amount;
+  } catch {
+    return 0n;
+  }
+}
+
 export const PROGRAM_ID = new PublicKey(
   process.env.PROGRAM_ID ?? "D6au34Ft153B5ghrujVzTg4nGJFiitpePnoQ666JPzB7"
 );

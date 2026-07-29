@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
-import { db, sessionsTable } from "@workspace/db";
+import { db, sessionsTable, paymentsTable } from "@workspace/db";
 import { CreateSessionBody } from "@workspace/api-zod";
 import {
   isErConfigured,
@@ -97,6 +97,17 @@ router.post("/sessions/:id/settle", async (req, res): Promise<void> => {
   try {
     const sig = await settleFacade(row.facadeKeypairB58, row.facadeAddress);
     await db.update(sessionsTable).set({ status: "settled" }).where(eq(sessionsTable.id, row.id));
+    // Auto-log to payments table so vault stats stay accurate
+    if (row.amount) {
+      await db.insert(paymentsTable).values({
+        amount: row.amount,
+        currency: row.currency ?? "USDC",
+        facadeAddress: row.facadeAddress,
+        sessionId: row.id,
+        txHash: sig,
+        merchantId: row.merchantId ?? null,
+      }).onConflictDoNothing();
+    }
     res.json({ sig, status: "settled" });
   } catch (e) {
     res.status(502).json({ error: "settlement failed", detail: String(e) });
