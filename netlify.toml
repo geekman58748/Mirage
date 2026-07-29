@@ -1,4 +1,20 @@
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/"
+  to = "/pages/dashboard.html"
+  status = 302
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/pages/dashboard.html"
   status = 200
+
+[[redirects]]
+  from = "/checkout"
+  to = "/pages/checkout.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"

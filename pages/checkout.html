@@ -378,7 +378,7 @@
   (async function loadSession() {
     if (!SESSION_ID) return;
     try {
-      const res  = await fetch(API_BASE + '/sessions/' + SESSION_ID);
+      const res  = await fetch(API_BASE + '/api/sessions/' + SESSION_ID);
       const data = await res.json();
       if (data.facadeAddress) {
         FACADE_ADDRESS = data.facadeAddress;
@@ -403,7 +403,7 @@
 
   async function logPaymentConfirmed() {
     try {
-      await fetch(API_BASE + '/payments', {
+      await fetch(API_BASE + '/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

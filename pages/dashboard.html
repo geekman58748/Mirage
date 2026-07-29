@@ -976,7 +976,7 @@
     preview.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Creating session…</div>';
 
     try {
-      const res = await fetch(API_BASE + '/sessions', {
+      const res = await fetch(API_BASE + '/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1108,8 +1108,8 @@ loadWallet();
 async function loadStats() {
   try {
     const [statsRes, allRes] = await Promise.all([
-      fetch(API_BASE + '/payments/stats'),
-      fetch(API_BASE + '/payments'),
+      fetch(API_BASE + '/api/payments/stats'),
+      fetch(API_BASE + '/api/payments'),
     ]);
     const { totalUSDC, totalPayments, recent } = await statsRes.json();
     const payments = await allRes.json();
@@ -1187,7 +1187,7 @@ async function loadApiKeys() {
   const list = document.getElementById('api-keys-list');
   if (!list) return;
   try {
-    const res = await fetch(API_BASE + '/api-keys?merchantId=' + encodeURIComponent(merchantId));
+    const res = await fetch(API_BASE + '/api/api-keys?merchantId=' + encodeURIComponent(merchantId));
     const keys = await res.json();
     if (!Array.isArray(keys) || keys.length === 0) {
       list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">No keys yet — create one above.</div>';
@@ -1212,7 +1212,7 @@ async function createApiKey() {
   const label = prompt('Key label (e.g. "Production", "Test"):', 'Production') || 'Default';
   const merchantId = localStorage.getItem('privy_user_id') || 'anon';
   try {
-    const res = await fetch(API_BASE + '/api-keys', {
+    const res = await fetch(API_BASE + '/api/api-keys', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ merchantId, label }),
@@ -1231,7 +1231,7 @@ async function createApiKey() {
 
 async function revokeApiKey(id) {
   if (!confirm('Revoke this key? This cannot be undone.')) return;
-  await fetch(API_BASE + '/api-keys/' + id, { method: 'DELETE' });
+  await fetch(API_BASE + '/api/api-keys/' + id, { method: 'DELETE' });
   loadApiKeys();
 }
 
