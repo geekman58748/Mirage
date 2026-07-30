@@ -197,4 +197,4 @@ The market it targets already processes hundreds of billions of dollars annually
 
 ---
 
-*Built at MagicBlock Blitz 2025.*
+*Built at MagicBlock Blitz 2026.*
