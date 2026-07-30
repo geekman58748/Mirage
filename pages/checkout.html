@@ -287,6 +287,30 @@
 
   /* Smooth Dissolve Effect */
   .faded-out{ opacity:0 !important; transform:scale(0.95); pointer-events:none; }
+
+  /* Minimum Amount Gate */
+  .minimum-gate{
+    display:none;flex-direction:column;align-items:center;
+    padding:12px 0 4px;text-align:center;
+  }
+  .minimum-gate.active{ display:flex; }
+  .minimum-icon{
+    width:44px;height:44px;border-radius:50%;
+    border:1.5px solid rgba(200,140,100,0.3);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:14px;
+    color:rgba(200,160,120,0.7);
+  }
+  .minimum-title{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:17px;font-weight:700;color:var(--white);
+    margin-bottom:6px;
+  }
+  .minimum-note{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;color:rgba(140,143,160,0.55);
+    letter-spacing:0.08em;text-transform:uppercase;margin-top:10px;
+  }
 </style>
 </head>
 <body>
@@ -309,6 +333,16 @@
     <div class="merchant-title" id="merchantName">Acme Corp</div>
     <div class="amount-display" id="amountDisplay">— <span>USDC</span></div>
     <div class="order-ref" id="orderRef">Order Ref: #INV-89201</div>
+  </div>
+
+  <!-- MINIMUM GATE -->
+  <div class="minimum-gate" id="minimumGate">
+    <div class="minimum-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="minimum-title">Minimum not met</div>
+    <p style="font-size:13px;color:rgba(140,143,160,0.7);max-width:280px;line-height:1.6;">Private settlement requires a minimum of <strong style="color:var(--white)">0.50 USDC</strong>. This session amount is below the threshold.</p>
+    <div class="minimum-note">[ PRIVATE ROUTING REQUIRES 0.5 USDC MIN ]</div>
   </div>
 
   <!-- STATE 1: WAITING -->
@@ -413,6 +447,12 @@
         }
         // Set timer from session expiry
         if (data.expiryMinutes) countdownSeconds = data.expiryMinutes * 60;
+        // Minimum gate — block sub-0.5 USDC from proceeding
+        if (PAYMENT_AMOUNT > 0 && PAYMENT_AMOUNT < 0.5) {
+          document.getElementById('stateWaiting').classList.remove('active-state');
+          document.getElementById('minimumGate').classList.add('active');
+          return;
+        }
       }
     } catch(e) { console.warn('Session load failed:', e); }
   })();

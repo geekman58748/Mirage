@@ -1237,14 +1237,17 @@ async function loadStats() {
       if (emptyRow) emptyRow.remove();
       feedBody.innerHTML = recent.map(p => {
         const ago = timeAgo(new Date(p.createdAt));
-        const shortAddr = (p.facadeAddress || '').length > 10
-          ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
-          : p.facadeAddress;
+        const addr = p.facadeAddress || '';
+        const shortAddr = addr.length > 10 ? addr.slice(0, 6) + '...' + addr.slice(-4) : addr;
+        const solscanAddr = addr ? `https://solscan.io/account/${addr}?cluster=devnet` : null;
+        const addrCell = solscanAddr
+          ? `<a href="${solscanAddr}" target="_blank" rel="noopener" style="color:rgba(190,193,210,0.7);font-family:var(--font-mono);font-size:11px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.1);">${shortAddr} ↗</a>`
+          : `<span class="truncated-facade">${shortAddr}</span>`;
         return `<tr>
           <td style="color:#ffffff;font-weight:600;">$${parseFloat(p.amount).toFixed(2)} ${p.currency}</td>
           <td style="color:var(--text-muted)">${ago}</td>
-          <td><span style="color:var(--emerald)">Confirmed</span></td>
-          <td><span class="badge-private">Private <span class="redacted-chars">— — —</span></span></td>
+          <td><span style="color:rgba(160,196,176,0.8);font-family:var(--font-mono);font-size:11px;">Confirmed</span></td>
+          <td>${addrCell}</td>
         </tr>`;
       }).join('');
     }
@@ -1261,19 +1264,26 @@ async function loadStats() {
       });
       const unique = Array.from(seen.values());
       histBody.innerHTML = unique.map(p => {
-        const shortAddr = p.facadeAddress.length > 10
-          ? p.facadeAddress.slice(0, 6) + '...' + p.facadeAddress.slice(-4)
-          : p.facadeAddress;
+        const addr = p.facadeAddress || '';
+        const shortAddr = addr.length > 10 ? addr.slice(0, 6) + '...' + addr.slice(-4) : addr;
         const ts = new Date(p.createdAt).toLocaleString(undefined, {
           year: 'numeric', month: '2-digit', day: '2-digit',
           hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
+        const solscanAddr = addr ? `https://solscan.io/account/${addr}?cluster=devnet` : null;
+        const solscanTx  = p.txHash ? `https://solscan.io/tx/${p.txHash}?cluster=devnet` : null;
+        const addrCell = solscanAddr
+          ? `<a href="${solscanAddr}" target="_blank" rel="noopener" style="color:rgba(190,193,210,0.7);font-family:var(--font-mono);font-size:11px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.1);">${shortAddr} ↗</a>`
+          : `<span class="truncated-facade">${shortAddr}</span>`;
+        const actionCell = solscanTx
+          ? `<a href="${solscanTx}" target="_blank" rel="noopener" style="color:rgba(160,163,185,0.6);font-family:var(--font-mono);font-size:10px;text-decoration:none;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.08);">VIEW TX ↗</a>`
+          : `<span class="tag-destroyed">Destroyed</span>`;
         return `<tr>
-          <td class="truncated-facade">${shortAddr}</td>
+          <td>${addrCell}</td>
           <td style="color:#ffffff;font-weight:600;">$${parseFloat(p.amount).toFixed(2)} ${p.currency}</td>
           <td style="color:var(--text-muted)">${ts}</td>
-          <td><span class="status-flow-pill">Confirmed → Forwarded → Closed</span></td>
-          <td><span class="tag-destroyed">Destroyed</span></td>
+          <td><span class="status-flow-pill">Confirmed · Forwarded · Closed</span></td>
+          <td>${actionCell}</td>
         </tr>`;
       }).join('');
     }
