@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mirage — Ephemeral Payment Gateway</title>
+<title>BlackRail — Private Checkout</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <!-- QRCode.js Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -15,10 +15,10 @@
     --muted:#8c8f9f;
     --bg:#07080e;
     --glass-border:rgba(255,255,255,0.08);
-    --accent-blue:#4f9fff;
-    --accent-cyan:#00d4ff;
-    --accent-green:#5deba0;
-    --accent-red:#ff5f57;
+    --accent-blue:#a8adc4;
+    --accent-cyan:#a8adc4;
+    --accent-green:#a8c4b0;
+    --accent-red:#cc7b7b;
   }
   body{
     background:var(--bg);
@@ -50,56 +50,64 @@
   }
   .light-core{
     position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);
-    width:500px;height:500px;
-    background:radial-gradient(circle, rgba(79,159,255,0.12) 0%, rgba(0,212,255,0.04) 50%, transparent 80%);
+    width:560px;height:560px;
+    background:radial-gradient(circle, rgba(255,255,255,0.04) 0%, rgba(200,205,220,0.015) 45%, transparent 80%);
     filter:blur(60px);
     pointer-events:none;
   }
 
-  /* Green Flash Overlay */
+  /* Confirmed Flash Overlay */
   .green-flash{
     position:fixed;inset:0;
-    background:radial-gradient(circle, rgba(93,235,160,0.2) 0%, transparent 70%);
+    background:radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
     opacity:0;pointer-events:none;z-index:1;
-    transition:opacity 0.6s ease;
+    transition:opacity 0.8s ease;
   }
   .green-flash.active{ opacity:1; }
 
   /* Brand Header */
   .brand-badge{
-    display:flex;align-items:center;gap:8px;
+    display:flex;align-items:center;gap:9px;
     font-family:'Plus Jakarta Sans',sans-serif;
     font-weight:700;font-size:15px;color:var(--white);
     margin-bottom:24px;z-index:2;
+    letter-spacing:-0.02em;
   }
   .logo-icon{
     width:22px;height:22px;
-    background:linear-gradient(135deg,rgba(79,159,255,0.9),rgba(0,212,255,0.7));
-    border-radius:50%;
+    background:#000;
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:5px;
     display:flex;align-items:center;justify-content:center;
-    font-size:10px;
   }
 
   /* Portal Card Container */
   .portal-card{
     position:relative;z-index:2;
     width:100%;max-width:440px;
-    background:rgba(10,11,18,0.85);
+    background:linear-gradient(160deg,#0e1018 0%,#090b12 100%);
     border:1px solid rgba(255,255,255,0.08);
-    border-radius:24px;
+    border-radius:20px;
     padding:36px 28px;
     backdrop-filter:blur(30px);
     box-shadow:
-      0 0 0 1px rgba(255,255,255,0.05),
-      0 32px 80px rgba(0,0,0,0.6),
-      0 0 80px rgba(79,159,255,0.05);
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 48px 100px rgba(0,0,0,0.7);
+  }
+  .portal-card::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.1) 50%,transparent 100%);
+    border-radius:20px 20px 0 0;
   }
   
   /* Portal Header */
   .portal-header{ text-align:center;margin-bottom:28px; }
   .merchant-title{
-    font-size:13px;font-weight:600;color:var(--muted);
-    text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;
+    font-size:10px;font-weight:500;color:rgba(140,143,159,0.6);
+    text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;
+    font-family:'JetBrains Mono',monospace;
   }
   .amount-display{
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -108,9 +116,10 @@
   }
   .amount-display span{ font-size:22px;color:rgba(255,255,255,0.6);font-weight:600; }
   .order-ref{
-    display:inline-block;font-size:12px;color:var(--muted);
-    background:rgba(255,255,255,0.03);padding:3px 10px;border-radius:100px;
-    border:1px solid rgba(255,255,255,0.05);font-family:'JetBrains Mono',monospace;
+    display:inline-block;font-size:11px;color:rgba(120,124,145,0.7);
+    background:rgba(255,255,255,0.02);padding:3px 10px;border-radius:2px;
+    border:1px solid rgba(255,255,255,0.06);font-family:'JetBrains Mono',monospace;
+    letter-spacing:0.06em;
   }
 
   /* Portal State Visibility */
@@ -139,7 +148,7 @@
   }
   .facade-address{
     font-family:'JetBrains Mono',monospace;
-    font-size:12px;color:var(--accent-cyan);
+    font-size:12px;color:rgba(190,193,210,0.8);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .btn-copy{
@@ -158,12 +167,13 @@
 
   .status-indicator{
     display:flex;align-items:center;gap:8px;
-    font-size:12px;font-weight:500;color:var(--accent-blue);
+    font-size:11px;font-weight:500;color:rgba(160,163,185,0.7);
     margin-bottom:20px;
+    font-family:'JetBrains Mono',monospace;letter-spacing:0.05em;
   }
   .pulse-dot{
-    width:8px;height:8px;border-radius:50%;
-    background:var(--accent-blue);
+    width:6px;height:6px;border-radius:50%;
+    background:rgba(200,202,216,0.6);
     box-shadow:0 0 10px var(--accent-blue);
     animation:pulse 1.8s ease-in-out infinite;
   }
@@ -255,9 +265,11 @@
 
   .dissolve-note{
     font-family:'JetBrains Mono',monospace;
-    font-size:11px;color:var(--accent-cyan);
-    opacity:0.8;margin-top:12px;margin-bottom:16px;
+    font-size:10px;color:rgba(140,143,160,0.55);
+    letter-spacing:0.06em;
+    margin-top:12px;margin-bottom:16px;
     text-align:center;
+    text-transform:uppercase;
   }
 
   .timestamp-tag{
@@ -279,7 +291,7 @@
 </head>
 <body>
 
-<a href="../index.html" style="position:fixed;top:16px;left:20px;z-index:999;color:rgba(255,255,255,0.4);font-size:12px;text-decoration:none;font-family:Inter,sans-serif;letter-spacing:.05em">← mirage</a>
+<a href="../index.html" style="position:fixed;top:16px;left:20px;z-index:999;color:rgba(255,255,255,0.25);font-size:11px;text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase">← blackrail</a>
 <div class="bg-scene">
   <div class="grid-overlay"></div>
   <div class="light-core"></div>
@@ -287,8 +299,8 @@
 <div class="green-flash" id="greenFlash"></div>
 
 <div class="brand-badge">
-  <div class="logo-icon">✨</div>
-  <span>Mirage Ephemeral Pay</span>
+  <div class="logo-icon"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/></svg></div>
+  <span>BlackRail</span>
 </div>
 
 <!-- Main Gateway Card -->
@@ -315,11 +327,11 @@
 
     <div class="status-indicator">
       <div class="pulse-dot"></div>
-      <span>Waiting for payment...</span>
+      <span>[ AWAITING ON-CHAIN CONFIRMATION ]</span>
     </div>
 
     <div class="instruction-note">
-      Open your wallet. Send <strong id="instrAmount">the exact amount</strong> to this address. No app connection required.
+      Open Phantom, Backpack, or Solflare. Send <strong id="instrAmount">the exact amount</strong> to this address. No wallet connect required.
     </div>
   </div>
 
@@ -332,16 +344,16 @@
       </svg>
     </div>
 
-    <div class="state-title">Payment Received</div>
-    
+    <div class="state-title">Settlement Complete</div>
+
     <!-- Dissolving Facade Address Area -->
     <div class="address-box" id="dissolvingAddrBox" style="width:100%; margin-top:12px;">
       <div class="facade-address" id="confirmedFacadeAddr">0x71C...4e89f2A</div>
-      <span style="font-size:10px;color:var(--accent-green);font-family:'JetBrains Mono',monospace;">PAID</span>
+      <span style="font-size:9px;color:rgba(160,196,176,0.8);font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;">SWEPT</span>
     </div>
-    
+
     <div class="dissolve-note" id="dissolveLine" style="display:none;">
-      This address no longer exists on-chain.
+      [ ADDRESS DISSOLVED · NO ON-CHAIN TRACE ]
     </div>
 
     <div class="timestamp-tag" id="confirmationTimestamp">Confirmed at --:--:--</div>
@@ -357,11 +369,11 @@
       </svg>
     </div>
 
-    <div class="state-title">Payment Expired</div>
-    <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:4px;">
-      This payment link has expired.
+    <div class="state-title">Session Closed</div>
+    <p style="font-size:12px;color:rgba(120,124,145,0.6);text-align:center;margin-top:6px;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">
+      This ephemeral address has been destroyed.
     </p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn-request-new" onclick="restartPaymentFlow()">Request New Payment Link</button><a href="dashboard.html" class="btn-request-new" style="text-decoration:none;background:rgba(255,255,255,0.08);color:#f1f3f9;border:1px solid rgba(255,255,255,0.12)">← Back to Dashboard</a></div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;"><button class="btn-request-new" onclick="restartPaymentFlow()">Request New Session</button><a href="dashboard.html" class="btn-request-new" style="text-decoration:none;background:rgba(255,255,255,0.05);color:rgba(200,202,216,0.8);border:1px solid rgba(255,255,255,0.1)">Back to Dashboard</a></div>
   </div>
 </div>
 
