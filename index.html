@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mirage — Private Crypto Merchant Gateway</title>
+<title>Mirage: Private Crypto Merchant Gateway</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -16,9 +16,9 @@
     --glass-bg:rgba(255,255,255,0.03);
     --glass-border:rgba(255,255,255,0.08);
     --glass-hover:rgba(255,255,255,0.06);
-    --accent-blue:#4f9fff;
-    --accent-cyan:#00d4ff;
-    --accent-glow:rgba(79,159,255,0.12);
+    --accent-blue:#8890aa;
+    --accent-cyan:#a8adc4;
+    --accent-glow:rgba(100,100,130,0.10);
   }
   html{scroll-behavior:smooth}
   body{
@@ -61,13 +61,13 @@
       from -20deg at 50% 100%,
       transparent 0deg,
       rgba(255,255,255,0.0) 0deg,
-      rgba(200,225,255,0.05) 10deg,
-      rgba(220,240,255,0.12) 16deg,
-      rgba(240,248,255,0.22) 20deg,
-      rgba(255,255,255,0.28) 25deg,
-      rgba(240,248,255,0.22) 30deg,
-      rgba(220,240,255,0.12) 34deg,
-      rgba(200,225,255,0.05) 40deg,
+      rgba(200,200,210,0.04) 10deg,
+      rgba(215,215,225,0.10) 16deg,
+      rgba(230,230,238,0.18) 20deg,
+      rgba(245,245,250,0.24) 25deg,
+      rgba(230,230,238,0.18) 30deg,
+      rgba(215,215,225,0.10) 34deg,
+      rgba(200,200,210,0.04) 40deg,
       transparent 45deg
     );
     filter:blur(24px);
@@ -79,7 +79,7 @@
     bottom:0;left:50%;
     transform:translateX(-50%);
     width:320px;height:600px;
-    background:linear-gradient(to top, rgba(255,255,255,0.22) 0%, rgba(180,220,255,0.08) 50%, transparent 100%);
+    background:linear-gradient(to top, rgba(255,255,255,0.18) 0%, rgba(180,180,200,0.06) 50%, transparent 100%);
     filter:blur(36px);
     animation:core-pulse 5s ease-in-out infinite alternate;
   }
@@ -221,9 +221,9 @@
   .hero-badge{
     display:inline-flex;align-items:center;gap:8px;
     padding:5px 14px;border-radius:100px;
-    background:rgba(79,159,255,0.08);
-    border:1px solid rgba(79,159,255,0.2);
-    font-size:12px;color:rgba(180,210,255,0.9);
+    background:rgba(120,120,150,0.08);
+    border:1px solid rgba(140,140,170,0.2);
+    font-size:12px;color:rgba(180,180,210,0.9);
     letter-spacing:0.02em;
     font-weight:500;margin-bottom:28px;
     animation:fade-up 0.6s ease both;
@@ -252,7 +252,7 @@
     font-weight:700;
     line-height:1.05;
     letter-spacing:-0.03em;
-    background:linear-gradient(135deg,#b0c8ff,#ffffff,#70b4ff);
+    background:linear-gradient(135deg,#c0c0cc,#ffffff,#9898aa);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     background-clip:text;
     margin-bottom:24px;
@@ -265,7 +265,7 @@
     line-height:1.7;
     animation:fade-up 0.6s 0.2s ease both;
   }
-  .hero-desc strong{color:rgba(220,230,255,0.9);font-weight:500}
+  .hero-desc strong{color:rgba(220,220,228,0.9);font-weight:500}
   .hero-actions{
     display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
     animation:fade-up 0.6s 0.25s ease both;
@@ -659,7 +659,7 @@
     <h1>Your money,</h1>
     <span class="hero-subtitle-line">nobody's business.</span>
     <p class="hero-desc">
-      <strong>Mirage</strong> is a private crypto payment gateway for merchants and professionals. Every single checkout generates a disposable, one-time payment address—hiding your wallet balance, revenue history, and transaction trail from public block explorers.
+      <strong>Mirage</strong> is a private crypto payment gateway for merchants and professionals. Every single checkout generates a disposable, one-time payment address, hiding your wallet balance, revenue history, and transaction trail from public block explorers.
     </p>
     <div class="hero-actions">
       <a href="#" onclick="openSignIn();return false;" class="btn-hero" style="text-decoration:none;display:inline-block">Get Started Free →</a>
@@ -673,7 +673,7 @@
           <div class="dot dot-r"></div>
           <div class="dot dot-y"></div>
           <div class="dot dot-g"></div>
-          <span class="frame-title">mirage.pay — Merchant Portal</span>
+          <span class="frame-title">mirage.pay · Merchant Portal</span>
         </div>
         <div class="frame-body">
           <div class="sidebar">
@@ -1034,7 +1034,7 @@ animateStars();
 
     <!-- Step 2: OTP input -->
     <div id="privy-step2" style="display:none;">
-      <div style="text-align:center;margin-bottom:20px;font-size:13px;color:#8c8f9f;">Check your inbox — enter the 6-digit code</div>
+      <div style="text-align:center;margin-bottom:20px;font-size:13px;color:#8c8f9f;">Check your inbox. Enter the 6-digit code.</div>
       <input id="privy-otp" type="text" maxlength="6" placeholder="000000" style="width:100%;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:22px;font-family:'JetBrains Mono',monospace;text-align:center;outline:none;box-sizing:border-box;letter-spacing:.3em;margin-bottom:12px;" />
       <button id="privy-verify-btn" onclick="privyVerifyOtp()" style="width:100%;padding:13px;background:#fff;color:#07080e;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;">Verify &amp; Enter →</button>
       <button onclick="document.getElementById('privy-step2').style.display='none';document.getElementById('privy-step1').style.display='block';" style="width:100%;padding:10px;background:none;border:none;color:#8c8f9f;font-size:13px;font-family:inherit;cursor:pointer;margin-top:8px;">← Back</button>
