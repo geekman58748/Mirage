@@ -195,12 +195,6 @@ The market it targets already processes hundreds of billions of dollars annually
 - Vault USDC ATA: `B82AzAWZsvVUwW1iddK8H45E1rj6QKS36X9FPFtHmbjM`
 - Network: Solana devnet
 
----
-
-*Built at MagicBlock Blitz 2026.*
-
----
-
 ## Mainnet
 
 Mainnet-ready — two steps:
@@ -208,3 +202,7 @@ Mainnet-ready — two steps:
 2. Update `SOLANA_RPC_URL`, `USDC_MINT`, and `MAGICBLOCK_API_URL` to mainnet values
 
 No architecture changes required.
+
+---
+
+*Built at MagicBlock Blitz 2026.*
