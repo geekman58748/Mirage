@@ -445,6 +445,15 @@
           const instrEl = document.getElementById('instrAmount');
           if (instrEl) instrEl.textContent = 'exactly ' + amt + ' USDC';
         }
+        // Merchant name + order ref from session label
+        if (data.label) {
+          const nameEl = document.getElementById('merchantName');
+          if (nameEl) nameEl.textContent = data.label;
+        }
+        if (data.id) {
+          const refEl = document.getElementById('orderRef');
+          if (refEl) refEl.textContent = 'Order Ref: #' + String(data.id).slice(0, 8).toUpperCase();
+        }
         // Set timer from session expiry
         if (data.expiryMinutes) countdownSeconds = data.expiryMinutes * 60;
         // Minimum gate — block sub-0.5 USDC from proceeding

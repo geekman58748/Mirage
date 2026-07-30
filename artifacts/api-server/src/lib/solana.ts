@@ -231,6 +231,16 @@ export async function settleFacade(
         const sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: true });
         await base.confirmTransaction(sig, "confirmed");
         console.log("[settle] MB private tx signed + confirmed:", sig);
+        // Close facade ATA to reclaim rent after private settlement
+        try {
+          const closeTx = new Transaction().add(
+            createCloseAccountInstruction(facadeAtaPk, server.publicKey, facade.publicKey)
+          );
+          await sendAndConfirmTransaction(base, closeTx, [server, facade]);
+          console.log("[settle] facade ATA closed, rent reclaimed");
+        } catch (closeErr) {
+          console.warn("[settle] facade ATA close failed (non-critical):", closeErr);
+        }
         return { sig, private: true };
       }
 
