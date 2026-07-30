@@ -46,6 +46,44 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* ── ATMOSPHERIC DEPTH ── */
+  .dash-atmosphere {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .dash-atmosphere::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: 5%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse at center,
+      rgba(255,255,255,0.028) 0%,
+      rgba(255,255,255,0.008) 40%,
+      transparent 70%);
+    animation: atmo-drift 12s ease-in-out infinite alternate;
+  }
+  .dash-atmosphere::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    left: 260px;
+    width: 500px;
+    height: 400px;
+    background: radial-gradient(ellipse at center,
+      rgba(180,185,210,0.018) 0%,
+      transparent 65%);
+    animation: atmo-drift 16s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes atmo-drift {
+    0%   { opacity: 0.6; transform: scale(0.95) translate(0,0); }
+    100% { opacity: 1;   transform: scale(1.08) translate(20px, -20px); }
+  }
+
   /* ── APP LAYOUT ── */
   .app-shell {
     display: flex;
@@ -227,8 +265,22 @@
   .view-title-group h1 {
     font-size: 24px;
     font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #c0c2d0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding-bottom: 0.05em;
+  }
+
+  .view-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(140,143,160,0.5);
+    margin-bottom: 6px;
+    display: block;
   }
 
   .view-title-group p {
@@ -239,10 +291,10 @@
 
   /* ── MATTE CARDS ── */
   .glass-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
+    background: linear-gradient(160deg, #111318 0%, #0d0f15 100%);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
     position: relative;
     overflow: hidden;
   }
@@ -257,6 +309,13 @@
 
   .metric-card {
     padding: 24px;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%);
   }
 
   .metric-header {
@@ -629,6 +688,7 @@
 </head>
 <body>
 
+<div class="dash-atmosphere"></div>
 <div class="app-shell">
 
   <!-- SIDEBAR NAVIGATION -->
@@ -709,6 +769,7 @@
     <div id="overview" class="page-view active">
       <div class="view-header">
         <div class="view-title-group">
+          <span class="view-label">[ BLACKRAIL · COMMAND ]</span>
           <h1>Merchant Overview</h1>
           <p>Real-time analytics & active ephemeral routing stats</p>
         </div>
@@ -774,7 +835,11 @@
             </thead>
             <tbody id="live-feed-tbody">
               <tr id="live-empty-row">
-                <td colspan="4" style="color:var(--text-muted);text-align:center;padding:24px 0;font-size:13px;">No payments logged yet — run a test transaction to see live data.</td>
+                <td colspan="4" style="text-align:center;padding:40px 0;">
+                  <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(90,93,109,0.6);margin-bottom:8px;">[ STREAM IDLE ]</div>
+                  <div style="font-size:13px;color:rgba(74,82,100,0.7);font-weight:500;">No trail. No record. Nothing to show.</div>
+                  <div style="font-size:11px;color:rgba(60,65,80,0.5);margin-top:4px;font-family:var(--font-mono);">Entries appear here only after a payment settles.</div>
+                </td>
               </tr>
 
             </tbody>
