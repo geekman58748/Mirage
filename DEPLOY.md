@@ -57,13 +57,3 @@ API_BASE=https://<your-railway-url>
 
 Server wallet pubkey: `2QGJqSPWogpnrsrEagH4Mn28JjvuxMjrNMPbUst56j6Y`  
 Vault ATA: `B82AzAWZsvVUwW1iddK8H45E1rj6QKS36X9FPFtHmbjM`
-
----
-
-## Mainnet
-
-Mainnet-ready — two steps:
-1. Deploy the Anchor program on mainnet and update `ANCHOR_PROGRAM_ID` in Railway env vars
-2. Update `SOLANA_RPC_URL`, `USDC_MINT`, and `MAGICBLOCK_API_URL` to mainnet values
-
-That is it. No architecture changes required.
