@@ -1,76 +1,59 @@
-# Deploying Mirage outside Replit
+# Deploying BlackRail outside Replit
 
-Two services to deploy. Both are free, no Supabase.
+## Stack
 
----
-
-## 1 — Database: Neon (free Postgres)
-
-1. Go to [neon.tech](https://neon.tech) → create a free account → create a project called `mirage`
-2. Copy the **connection string** — looks like:
-   ```
-   postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
-3. Save it — you'll paste it as `DATABASE_URL` in Railway next.
-
-Run migrations against Neon once you have the URL:
-```bash
-DATABASE_URL="postgresql://..." pnpm --filter @workspace/db exec drizzle-kit push
-```
+- **Frontend:** Static HTML — Netlify (auto-deploys from `main`)
+- **API:** Express/TypeScript — Railway (auto-deploys from `main`)
+- **DB:** Neon Postgres (Drizzle ORM)
+- **Auth:** Privy
+- **Chain:** Solana devnet / MagicBlock Payments API
 
 ---
 
-## 2 — API Server: Railway
+## 1. Database (Neon)
 
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub repo → pick `geekman58748/Mirage`
-2. Set **Root Directory** to `artifacts/api-server`
-3. Add these environment variables in Railway:
-   ```
-   DATABASE_URL   = <your Neon connection string>
-   SESSION_SECRET = <any random 32-char string>
-   PORT           = 8080
-   NODE_ENV       = production
-   ```
-4. Railway auto-detects `railway.json` and builds + starts the server.
-5. Once deployed, copy the Railway URL — looks like `https://mirage-api-production.up.railway.app`
+1. Go to [neon.tech](https://neon.tech) → create a free account → create a project called `blackrail`
+2. Copy the connection string — it looks like `postgres://user:pass@host/dbname`
+3. Run migrations: `pnpm --filter @workspace/db run db:push`
 
 ---
 
-## 3 — Frontend: Tell Netlify the API URL
+## 2. API Server (Railway)
 
-In Netlify → Site Settings → Environment Variables, add:
+1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub repo → pick `geekman58748/blackrail`
+2. Add the following environment variables in Railway:
+
 ```
-MIRAGE_API_BASE = https://mirage-api-production.up.railway.app/api
-```
-
-Then in your HTML, the `window.MIRAGE_API_BASE` injection:
-
-Add this to `netlify.toml`:
-```toml
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Content-Security-Policy = ""
-
-[[plugins]]
-# no plugin needed — use a _headers file or inject via edge function
+NEON_DATABASE_URL=<your neon connection string>
+SESSION_SECRET=<random 64-char string>
+SERVER_KEYPAIR=<base58-encoded server keypair>
+USDC_MINT=4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+MERCHANT_USDC_ATA=<your vault ATA address>
+PRIVY_APP_ID=<your privy app id>
+PRIVY_APP_SECRET=<your privy app secret>
 ```
 
-Simplest approach — add one line in each HTML page `<head>`:
-```html
-<script>window.MIRAGE_API_BASE = '%%MIRAGE_API_BASE%%';</script>
-```
-Netlify replaces `%%VAR%%` with environment variables at build time when using the
-[Netlify Build plugin for env injection](https://github.com/netlify/netlify-plugin-inline-env).
-
-Or just hardcode the Railway URL directly in the two HTML files once you have it.
+3. Railway picks up `nixpacks.toml` automatically — no extra config needed
+4. Once deployed, copy the Railway URL
 
 ---
 
-## Summary
+## 3. Frontend (Netlify)
 
-| What | Where | Cost |
-|---|---|---|
-| Database | Neon | Free (0.5 GB storage) |
-| API | Railway | Free ($5/mo credit) |
-| Frontend | Netlify | Free |
+1. Go to [netlify.com](https://netlify.com) → Add new site → Import from Git → pick `geekman58748/blackrail`
+2. Build command: *(leave blank — static site)*
+3. Publish directory: `/` (root)
+4. Add environment variable:
+
+```
+API_BASE=https://<your-railway-url>
+```
+
+5. Update the `API_BASE` constant in `pages/dashboard.html`, `pages/checkout.html`, and `index.html` to point to your Railway URL if different from `mirage-production-6dfc.up.railway.app`
+
+---
+
+## Vault
+
+Server wallet pubkey: `2QGJqSPWogpnrsrEagH4Mn28JjvuxMjrNMPbUst56j6Y`  
+Vault ATA: `B82AzAWZsvVUwW1iddK8H45E1rj6QKS36X9FPFtHmbjM`
