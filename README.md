@@ -153,6 +153,32 @@ POST   /api/vault/withdraw            Withdraw to any address
 
 ---
 
+## The Revolution
+
+I built BlackRail to remove the abstraction friction that is quietly killing Web3 adoption at the retail level.
+
+Here is the honest problem nobody talks about enough: the trust layer is already broken.
+
+I remember trying to purchase a name service on a platform similar to ENS. I could not understand why I had to sign a transaction in my wallet to complete what felt like a simple purchase. ENS is globally recognised. The platform was legitimate. But the moment a wallet signature prompt appeared, I froze. Not because I lacked technical knowledge, but because the experience itself was fundamentally unsafe by design.
+
+Wallet signatures are the single largest attack surface in all of Web3. They are the reason hacks happen. They are the reason drains happen. I am a victim myself. The pattern is identical every time: a platform that requires some form of payment or approval, a signature prompt, and a message underneath that 65% of users in documented cases do not read, and 45% do not understand even when they try.
+
+The signature is asking you to trust a contract you cannot audit, on a platform you found an hour ago, with money you cannot get back.
+
+BlackRail removes this entirely.
+
+With BlackRail, you do not sign anything. You do not connect your wallet. You do not approve a contract. You receive an address, you send to it from any wallet using the method you already know, and the gateway handles everything else. Verification, settlement, confirmation. It works exactly like the Web2 payment flow that billions of people already trust: you send to a gateway, it checks and verifies, you get your product.
+
+This is not a compromise. It is the correct architecture for onboarding the next wave of retail users.
+
+The people who will push Web3 to a billion users are not DeFi natives. They are everyday people who have never touched a hardware wallet, who send money through Paystack and PayPal, who buy airtime and pay rent on mobile apps. For them, a wallet signature prompt is not a speed bump. It is a full stop.
+
+BlackRail builds the payment layer those users can actually use. Private by architecture. Familiar by design. No signatures. No wallet connections. No trust assumptions.
+
+The ecosystem does not need more tools for the people already inside it. It needs friendlier infrastructure for the people still outside.
+
+---
+
 ## Hackathon Track
 
 **MagicBlock Blitz: Ephemeral Rollups / Private ERs**
