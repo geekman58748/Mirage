@@ -230,7 +230,13 @@ export async function settleFacade(
         vtx.addSignature(facade.publicKey, Buffer.from(facadeSig));
         const sig = await base.sendRawTransaction(vtx.serialize(), { skipPreflight: true });
         await base.confirmTransaction(sig, "confirmed");
-        console.log("[settle] MB private tx signed + confirmed:", sig);
+        // Verify the tx actually succeeded — confirmTransaction only checks inclusion, not execution
+        const txCheck = await base.getTransaction(sig, { maxSupportedTransactionVersion: 0 });
+        if (txCheck?.meta?.err) {
+          console.warn("[settle] MB tx confirmed but execution failed:", JSON.stringify(txCheck.meta.err), "— falling back to SPL");
+          throw new Error("MB tx execution failed: " + JSON.stringify(txCheck.meta.err));
+        }
+        console.log("[settle] MB private tx confirmed + verified:", sig);
         // Close facade ATA to reclaim rent after private settlement
         try {
           const closeTx = new Transaction().add(
