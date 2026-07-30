@@ -1277,7 +1277,9 @@ async function loadStats() {
           : `<span class="truncated-facade">${shortAddr}</span>`;
         const actionCell = solscanTx
           ? `<a href="${solscanTx}" target="_blank" rel="noopener" style="color:rgba(160,163,185,0.6);font-family:var(--font-mono);font-size:10px;text-decoration:none;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.08);">VIEW TX ↗</a>`
-          : `<span class="tag-destroyed">Destroyed</span>`;
+          : solscanAddr
+            ? `<a href="${solscanAddr}" target="_blank" rel="noopener" style="color:rgba(120,123,145,0.55);font-family:var(--font-mono);font-size:10px;text-decoration:none;letter-spacing:0.06em;border-bottom:1px solid rgba(255,255,255,0.06);">VIEW ADDR ↗</a>`
+            : `<span class="tag-destroyed">Destroyed</span>`;
         return `<tr>
           <td>${addrCell}</td>
           <td style="color:#ffffff;font-weight:600;">$${parseFloat(p.amount).toFixed(2)} ${p.currency}</td>
