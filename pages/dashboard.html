@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MiragePay — Merchant Command Center</title>
+<title>BlackRail — Merchant Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
@@ -19,11 +19,11 @@
     --text-secondary: #8a94a6;
     --text-muted: #4a5264;
     
-    --cyan: #06b6d4;
-    --indigo: #6366f1;
-    --emerald: #10b981;
-    --amber: #f59e0b;
-    --rose: #f43f5e;
+    --cyan: #a8adc4;
+    --indigo: #8890aa;
+    --emerald: #a8adc4;
+    --amber: #c8cad8;
+    --rose: #cc7b7b;
 
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
@@ -79,8 +79,9 @@
   .brand-logo-mark {
     width: 32px;
     height: 32px;
-    border-radius: 8px;
-    background: var(--indigo);
+    border-radius: 7px;
+    background: #000;
+    border: 1px solid rgba(255,255,255,0.12);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -102,15 +103,16 @@
 
   .brand-badge {
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    letter-spacing: 0.12em;
+    padding: 2px 7px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.03);
+    color: rgba(140,143,160,0.7);
+    border: 1px solid rgba(255,255,255,0.07);
     margin-left: auto;
+    font-family: var(--font-mono);
   }
 
   .nav-section {
@@ -182,15 +184,15 @@
     gap: 10px;
     padding: 10px;
     border-radius: 6px;
-    background: rgba(16, 185, 129, 0.04);
-    border: 1px solid rgba(16, 185, 129, 0.12);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
   }
 
   .pulse-node {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--emerald);
+    background: rgba(200,202,216,0.6);
   }
 
   /* ── MAIN CONTENT AREA ── */
@@ -299,8 +301,8 @@
   }
 
   .trend-up {
-    color: var(--emerald);
-    font-weight: 600;
+    color: rgba(200,202,216,0.8);
+    font-weight: 500;
   }
 
   /* ── TERMINAL TABLE DESIGN ── */
@@ -375,10 +377,10 @@
     align-items: center;
     gap: 6px;
     padding: 3px 8px;
-    border-radius: 4px;
-    background: rgba(147, 51, 234, 0.08);
-    border: 1px solid rgba(168, 85, 247, 0.2);
-    color: #c084fc;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(160,163,185,0.8);
     font-family: var(--font-mono);
     font-size: 11px;
   }
@@ -633,14 +635,10 @@
   <aside class="sidebar">
     <div class="brand-header" style="cursor:pointer" onclick="window.location.href='../index.html'">
       <div class="brand-logo-mark">
-        <svg class="brand-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/></svg>
       </div>
-      <span class="brand-name">MiragePay</span>
-      <span class="brand-badge">V2</span>
+      <span class="brand-name">BlackRail</span>
+      <span class="brand-badge">PRIVATE</span>
     </div>
 
     <div class="nav-section">
@@ -700,7 +698,7 @@
         </div>
       </div>
       <div id="sidebar-wallet" style="font-family:var(--font-mono);font-size:10px;color:var(--text-muted);padding:6px 8px;background:#08090d;border:1px solid var(--border-subtle);border-radius:6px;margin-bottom:8px;display:none;word-break:break-all;cursor:pointer;" title="Click to copy" onclick="copyWallet()"></div>
-      <button onclick="doLogout()" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(244,63,94,0.3);border-radius:6px;color:#f43f5e;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(244,63,94,0.08)'" onmouseout="this.style.background='transparent'">Sign Out</button>
+      <button onclick="doLogout()" style="width:100%;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.07);border-radius:4px;color:rgba(120,123,140,0.8);font-size:10px;font-weight:500;font-family:var(--font-mono);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.14)';this.style.color='rgba(200,200,210,0.9)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.color='rgba(120,123,140,0.8)'">Sign Out</button>
     </div>
   </aside>
 
@@ -727,7 +725,7 @@
             <span class="currency-tag">USDC</span>
           </div>
           <div class="metric-footer">
-            <span class="trend-up">+24.8%</span> vs previous month
+            <span class="trend-up" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.04em;">[ PRIVATE ]</span> on-chain balance hidden
           </div>
         </div>
 
@@ -762,7 +760,7 @@
       <div class="terminal-box">
         <div class="terminal-bar">
           <span class="terminal-title">LIVE_PAYMENT_STREAM</span>
-          <span style="font-size:10px;font-family:var(--font-mono);color:var(--emerald);">● STREAMING</span>
+          <span style="font-size:10px;font-family:var(--font-mono);color:rgba(160,163,185,0.5);letter-spacing:0.06em;">● LIVE</span>
         </div>
         <div class="table-responsive">
           <table class="data-table mono-styled">
@@ -922,7 +920,7 @@
       <div class="view-header">
         <div class="view-title-group">
           <h1>API Credentials</h1>
-          <p>Integrate MiragePay facade generation into custom checkouts</p>
+          <p>Integrate BlackRail facade generation into custom checkouts</p>
         </div>
         <button class="btn-action-primary" style="width:auto;padding:8px 16px;" onclick="createApiKey()">+ New API Key</button>
       </div>
