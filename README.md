@@ -198,3 +198,13 @@ The market it targets already processes hundreds of billions of dollars annually
 ---
 
 *Built at MagicBlock Blitz 2026.*
+
+---
+
+## Mainnet
+
+Mainnet-ready — two steps:
+1. Deploy the Anchor program on mainnet and update `ANCHOR_PROGRAM_ID` in Railway env vars
+2. Update `SOLANA_RPC_URL`, `USDC_MINT`, and `MAGICBLOCK_API_URL` to mainnet values
+
+No architecture changes required.
