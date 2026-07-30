@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mirage: Private Crypto Merchant Gateway</title>
+<title>BlackRail: Private Crypto Merchant Gateway</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -252,7 +252,7 @@
     font-weight:700;
     line-height:1.05;
     letter-spacing:-0.03em;
-    background:linear-gradient(135deg,#c0c0cc,#ffffff,#9898aa);
+    background:linear-gradient(160deg,#ffffff 0%,#d0d0d8 60%,#a0a0b0 100%);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
     background-clip:text;
     margin-bottom:24px;
@@ -421,7 +421,7 @@
   .section-label{
     display:inline-block;
     font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
-    color:rgba(79,159,255,0.8);margin-bottom:12px;
+    color:rgba(160,160,185,0.75);margin-bottom:12px;
   }
   .section-title{
     font-family:'Plus Jakarta Sans',sans-serif;
@@ -473,8 +473,8 @@
     display:inline-block;margin-top:16px;
     padding:3px 10px;border-radius:100px;
     font-size:10px;font-weight:500;letter-spacing:0.02em;
-    background:rgba(79,159,255,0.08);color:rgba(140,190,255,0.9);
-    border:1px solid rgba(79,159,255,0.12);
+    background:rgba(255,255,255,0.04);color:rgba(160,160,185,0.85);
+    border:1px solid rgba(255,255,255,0.08);
   }
 
   /* ── BENTO / USE CASES ── */
@@ -499,7 +499,7 @@
   .bento-card.wide{grid-column:span 2}
   .bento-tag{
     font-size:11px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;
-    color:rgba(79,159,255,0.8);margin-bottom:12px;
+    color:rgba(160,160,185,0.7);margin-bottom:12px;
     display:block;
   }
   .bento-h{
@@ -545,8 +545,8 @@
     display:flex;align-items:center;justify-content:center;
     font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;
     color:var(--white);
-    background:rgba(79,159,255,0.1);
-    border:1px solid rgba(79,159,255,0.3);
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
     margin-bottom:16px;
   }
   .step-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px}
@@ -634,8 +634,8 @@
   <div class="nav-wrapper">
     <nav id="navbar">
       <div class="nav-logo">
-        <div class="logo-icon">✨</div>
-        <span>Mirage</span>
+        <div class="logo-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".5"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/></svg></div>
+        <span>BlackRail</span>
       </div>
       <ul class="nav-links">
         <li><a href="#features">Features</a></li>
@@ -659,7 +659,7 @@
     <h1>Your money,</h1>
     <span class="hero-subtitle-line">nobody's business.</span>
     <p class="hero-desc">
-      <strong>Mirage</strong> is a private crypto payment gateway for merchants and professionals. Every single checkout generates a disposable, one-time payment address, hiding your wallet balance, revenue history, and transaction trail from public block explorers.
+      <strong>BlackRail</strong> is a private crypto payment gateway for merchants and professionals. Every checkout generates a disposable, one-time address — hiding your wallet balance, revenue history, and transaction trail from public block explorers.
     </p>
     <div class="hero-actions">
       <a href="#" onclick="openSignIn();return false;" class="btn-hero" style="text-decoration:none;display:inline-block">Get Started Free →</a>
@@ -673,13 +673,13 @@
           <div class="dot dot-r"></div>
           <div class="dot dot-y"></div>
           <div class="dot dot-g"></div>
-          <span class="frame-title">mirage.pay · Merchant Portal</span>
+          <span class="frame-title">blackrail · Merchant Portal</span>
         </div>
         <div class="frame-body">
           <div class="sidebar">
             <div class="sidebar-logo">
-              <div class="s-icon">✨</div>
-              Mirage
+              <div class="s-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="0.8" fill="currentColor" opacity=".9"/><rect x="7" y="1" width="4" height="4" rx="0.8" fill="currentColor" opacity=".5"/><rect x="1" y="7" width="4" height="4" rx="0.8" fill="currentColor" opacity=".5"/><rect x="7" y="7" width="4" height="4" rx="0.8" fill="currentColor" opacity=".9"/></svg></div>
+              BlackRail
             </div>
             <div class="sidebar-item active"><div class="s-dot"></div> Checkout Links</div>
             <div class="sidebar-item"><div class="s-dot"></div> One-Time Routes</div>
@@ -719,7 +719,7 @@
                 <span style="min-width:80px;text-align:right">Paid</span>
               </div>
               <div class="tx-row">
-                <div class="tx-icon ephemeral">⚡</div>
+                <div class="tx-icon ephemeral"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2L4 9h4l-1 5 5-7H8L9 2z"/></svg></div>
                 <div class="tx-addr">Inv #8092 · 7xK2…p9Lq</div>
                 <div class="tx-status one-time">AUTO-SWEPT</div>
                 <div class="tx-amount">$1,250.00</div>
@@ -731,7 +731,7 @@
                 <div class="tx-amount">$340.00</div>
               </div>
               <div class="tx-row">
-                <div class="tx-icon settled">🔒</div>
+                <div class="tx-icon settled"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="10" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg></div>
                 <div class="tx-addr">Freelance Invoice · 9pQ4…m2K1</div>
                 <div class="tx-status one-time">DISPOSABLE</div>
                 <div class="tx-amount">$4,500.00</div>
@@ -747,40 +747,40 @@
   <div class="section" id="features">
     <span class="section-label">Merchant Privacy Primitives</span>
     <h2 class="section-title">Standard checkout experience.<br/>Zero public trail.</h2>
-    <p class="section-desc">Mirage decouples your customer payments from your actual wallet identity using high-performance MagicBlock infrastructure.</p>
+    <p class="section-desc">BlackRail decouples your customer payments from your actual wallet identity using high-performance MagicBlock infrastructure.</p>
     <div class="feature-grid">
       <div class="feature-card">
-        <div class="feat-icon">🎯</div>
+        <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/></svg></div>
         <div class="feat-title">One-Time Addresses</div>
         <div class="feat-desc">Every single transaction spins up a fresh, single-use address on Solana. Customers never see where your main treasury resides.</div>
         <span class="feat-tag">MagicBlock: Dynamic Accounts</span>
       </div>
       <div class="feature-card">
-        <div class="feat-icon">🛡</div>
+        <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L3 4.5v4c0 3 2.5 5 5 5.5 2.5-.5 5-2.5 5-5.5v-4L8 2z"/></svg></div>
         <div class="feat-title">Revenue Obfuscation</div>
         <div class="feat-desc">Prevent competitors, customers, and scraping tools from analyzing your daily sales volume, average order values, or wallet balances.</div>
         <span class="feat-tag">Unlinkable Payment Paths</span>
       </div>
       <div class="feature-card">
-        <div class="feat-icon">⚡</div>
+        <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2L4 9h4l-1 5 5-7H8L9 2z"/></svg></div>
         <div class="feat-title">Seamless Friction-Free Pay</div>
         <div class="feat-desc">The buyer opens a completely familiar Solana checkout window, approves the payment, and receives instant confirmation.</div>
         <span class="feat-tag">Native Solana UX</span>
       </div>
       <div class="feature-card">
-        <div class="feat-icon">🔄</div>
+        <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8a5 5 0 0 1 5-5 5 5 0 0 1 3.5 1.5M13 8a5 5 0 0 1-5 5 5 5 0 0 1-3.5-1.5"/><path d="M11 4.5V2h2.5M5 11.5V14H2.5"/></svg></div>
         <div class="feat-title">Automated Sweeping</div>
         <div class="feat-desc">Once payment is verified, funds are automatically routed into your private destination wallet via un-indexable transfer routines.</div>
         <span class="feat-tag">Instant Auto-Settlement</span>
       </div>
       <div class="feature-card">
-        <div class="feat-icon">🔌</div>
+        <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1.5"/><path d="M5 5V3.5a1.5 1.5 0 0 1 3 0M8 5V3.5a1.5 1.5 0 0 1 3 0"/></svg></div>
         <div class="feat-title">Developer APIs & SDKs</div>
-        <div class="feat-desc">Embed Mirage into your React, Next.js, or e-commerce shop with 5 lines of code. Works smoothly out of the box.</div>
-        <span class="feat-tag">@mirage/sdk</span>
+        <div class="feat-desc">Embed BlackRail into your React, Next.js, or e-commerce shop with 5 lines of code. Works smoothly out of the box.</div>
+        <span class="feat-tag">@blackrail/sdk</span>
       </div>
       <div class="feature-card">
-        <div class="feat-icon">📊</div>
+        <div class="feat-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 10V8M8 10V6M11 10V4"/></svg></div>
         <div class="feat-title">Private Accounting</div>
         <div class="feat-desc">Track sales, issue refunds, and download tax statements internally while remaining completely opaque to public chain indexers.</div>
         <span class="feat-tag">Encrypted Merchant Dashboard</span>
@@ -792,12 +792,12 @@
   <div class="section" style="padding-top:0" id="use-cases">
     <span class="section-label">Target Merchants</span>
     <h2 class="section-title">Designed for businesses accepting crypto</h2>
-    <p class="section-desc">Public blockchains make traditional business operations vulnerable to spying. Mirage solves this across all merchant scales.</p>
+    <p class="section-desc">Public blockchains make traditional business operations vulnerable to spying. BlackRail solves this across all merchant scales.</p>
     <div class="bento-grid">
       <div class="bento-card">
         <span class="bento-tag">Freelancers & Contractors</span>
         <div class="bento-h">Invoice clients without leaking your net worth.</div>
-        <p class="bento-p">Sending a client a regular wallet address lets them see every other payment you've received. Mirage generates a unique one-time link per invoice.</p>
+        <p class="bento-p">Sending a client a regular wallet address lets them see every other payment you've received. BlackRail generates a unique one-time link per invoice.</p>
         <div class="checkout-preview">
           <div class="checkout-line">
             <span style="color:var(--muted)">Client: Acme Corp</span>
@@ -812,7 +812,7 @@
       <div class="bento-card">
         <span class="bento-tag">E-Commerce Stores</span>
         <div class="bento-h">Prevent competitors from copying your sales data.</div>
-        <p class="bento-p">On transparent ledgers, competitors track your sales in real-time. Mirage's MagicBlock routing keeps store volume completely private.</p>
+        <p class="bento-p">On transparent ledgers, competitors track your sales in real-time. BlackRail's MagicBlock routing keeps store volume completely private.</p>
         <div class="checkout-preview">
           <div class="checkout-line">
             <span style="color:var(--muted)">Cart #18,203</span>
@@ -839,13 +839,13 @@
   <!-- HOW IT WORKS -->
   <div class="section" style="padding-top:0" id="how-it-works">
     <span class="section-label">Under the Hood</span>
-    <h2 class="section-title">How Mirage Works</h2>
+    <h2 class="section-title">How BlackRail Works</h2>
     <p class="section-desc">Four simple steps to shield your business revenue from public view.</p>
     <div class="steps-grid">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-title">Create Payment Link</div>
-        <div class="step-desc">Merchant generates a checkout link via Mirage API, SDK, or dashboard for a specific item or invoice.</div>
+        <div class="step-desc">Merchant generates a checkout link via BlackRail API, SDK, or dashboard for a specific item or invoice.</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
@@ -868,9 +868,9 @@
   <!-- CTA -->
   <div class="cta-section">
     <h2>Privacy is a right.<br/>Not a feature.</h2>
-    <p>Stop broadcasting your balance to every client and competitor. Start accepting crypto privately with Mirage.</p>
+    <p>Stop broadcasting your balance to every client and competitor. Start accepting crypto privately with BlackRail.</p>
     <div class="cta-btns">
-      <a href="#" onclick="openSignIn();return false;" class="btn-hero" style="text-decoration:none;display:inline-block">Launch Mirage Dashboard →</a>
+      <a href="#" onclick="openSignIn();return false;" class="btn-hero" style="text-decoration:none;display:inline-block">Launch BlackRail →</a>
       <a href="https://github.com/geekman58748/Mirage" target="_blank" class="btn-hero-outline" style="text-decoration:none;display:inline-block">View on GitHub</a>
     </div>
   </div>
@@ -879,7 +879,7 @@
   <footer>
     <div class="footer-logo">
       <div class="logo-icon" style="width:20px;height:20px;font-size:10px">✨</div>
-      Mirage
+      BlackRail
     </div>
     <div class="footer-links">
       <a href="https://github.com/geekman58748/Mirage" target="_blank">GitHub</a>
@@ -1011,7 +1011,7 @@ animateStars();
 <div id="signinOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(7,8,14,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;">
   <div style="background:#0d0f1a;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;margin:20px;box-shadow:0 32px 80px rgba(0,0,0,0.6);">
     <div style="text-align:center;margin-bottom:28px;">
-      <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px;">Access Mirage</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px;">Access BlackRail</div>
       <div style="font-size:13px;color:#8c8f9f;">Sign in to your merchant account</div>
     </div>
 
