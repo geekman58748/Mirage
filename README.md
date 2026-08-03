@@ -77,6 +77,20 @@ BlackRail uses the **MagicBlock Payments API (`/v1/spl/transfer` with `visibilit
 
 This is the core primitive that makes BlackRail possible. Without private ER routing, the sweep is visible on-chain and the privacy guarantee collapses.
 
+### Beyond Unlinking: Splits and Delayed Release
+
+The same PER transfer call that breaks the sender/destination link also supports
+configurable **split payments** and **time delayed disbursement**, both set at the
+point of delegation and encrypted client-side, meaning even MagicBlock's own
+infrastructure can't see recipient breakdown or release timing until settlement.
+
+BlackRail's current settlement path uses a single recipient, immediate release
+transfer. Splits and delay aren't used in this build, but they're a natural next
+step for the merchant-facing product: automatic platform-fee routing on
+settlement, or a delayed release window for refund eligible orders, both without
+any additional infrastructure, since the primitive already supports it.
+
+
 ---
 
 ## How It Works: Full Flow
@@ -124,6 +138,29 @@ This is the core primitive that makes BlackRail possible. Without private ER rou
 
 **DB:** Neon Postgres via Drizzle ORM. Schema: `sessions` (facade keypair, status, amount, expiry) and `payments` (settled records).
 
+### Why the Hosted Payments API, Not Raw SDK Delegation
+
+BlackRail integrates MagicBlock's Private Payments API rather than implementing
+ER delegation directly against the SDK. This was a deliberate choice: the privacy
+primitive (unlinkable facade → vault settlement via a Private Ephemeral Rollup)
+is a solved problem at that layer. Re deriving PER delegation at the SDK level
+would have meant spending hackathon build time re implementing a primitive
+MagicBlock already ships which blackrail is 100% impossible without, instead of building the merchant facing product this
+submission is actually about: the checkout session model, disposable facade
+flow, merchant dashboard and privacy layer for businesses against competitors.
+
+### Confirmed Directly by MagicBlock
+
+To confirm the transfer genuinely executes inside the PER (rather than the
+`visibility: private` flag being cosmetic for `base→base` transfers), we asked
+directly in MagicBlock's public builder Telegram group and confirmed:
+
+> "The transfer goes through the PER to break the link sender/destination,
+> additionally it perform the splits and delay (based on the transfer config)."
+
+This confirms the unlinkability guarantee and the split/delay capability
+described above is enforced inside the PER itself, not just claimed at the
+API surface.
 ---
 
 ## Stack
