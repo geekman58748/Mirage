@@ -14,6 +14,11 @@ router.get("/vault/balance", async (_req, res): Promise<void> => {
 });
 
 router.post("/vault/withdraw", async (req, res): Promise<void> => {
+  const secret = req.headers["x-withdraw-secret"];
+  if (!secret || secret !== process.env.WITHDRAW_SECRET) {
+    res.status(401).json({ error: "unauthorized" });
+    return;
+  }
   if (!isWithdrawConfigured()) {
     res.status(400).json({ error: "VAULT_KEYPAIR not set — add it to Railway env vars to enable withdrawals" });
     return;
