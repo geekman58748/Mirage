@@ -67,6 +67,10 @@ Buyer wallet  -->  Ephemeral facade  -->  [MagicBlock ER]  -->  Merchant vault
 
 After settlement, the facade address is destroyed. The on-chain record shows a payment to an address that no longer exists and cannot be traced back to the vault.
 
+**Implementation note:** In the current demo, the vault is represented by the vault wallet's USDC associated token account (`B82AzAWZ...`), owned by `2QGJqSPW...`. The token account itself is a normal public Solana account; the privacy comes from the settlement path that separates the disposable facade from the vault, not from hiding the vault account.
+
+Private settlement is attempted for qualifying transfers. If a transfer is below the gasless minimum or the MagicBlock private request cannot complete, the system falls back to a standard public SPL settlement.
+
 ---
 
 ## Why This Is an Ephemeral Rollups Use Case
@@ -145,9 +149,10 @@ ER delegation directly against the SDK. This was a deliberate choice: the privac
 primitive (unlinkable facade → vault settlement via a Private Ephemeral Rollup)
 is a solved problem at that layer. Re deriving PER delegation at the SDK level
 would have meant spending hackathon build time re implementing a primitive
-MagicBlock already ships which blackrail is 100% impossible without, instead of building the merchant facing product this
-submission is actually about: the checkout session model, disposable facade
-flow, merchant dashboard and privacy layer for businesses against competitors.
+MagicBlock already ships which blackrail is 100% impossible without, instead of
+building the merchant facing product this submission is actually about: the
+checkout session model, disposable facade flow, merchant dashboard and privacy
+layer for businesses against competitors.
 
 ### Confirmed Directly by MagicBlock
 
@@ -229,7 +234,7 @@ The market it targets already processes hundreds of billions of dollars annually
 ## Vault
 
 - Vault owner: `2QGJqSPWogpnrsrEagH4Mn28JjvuxMjrNMPbUst56j6Y`
-- Vault USDC ATA: `B82AzAWZsvVUwW1iddK8H45E1rj6QKS36X9FPFtHmbjM`
+- Vault USDC ATA: `B82AzAWZsvVUwW1iddK8H45E1rj6QKS36X9FPFtHmbjM` (the vault owner's USDC token account)
 - Network: Solana devnet
 
 ## Mainnet
